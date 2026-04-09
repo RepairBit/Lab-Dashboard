@@ -1,608 +1,120 @@
 <!DOCTYPE html>
-<!-- saved from url=(0053)file:///C:/Users/kmead/Downloads/lab_dashboard_1.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lab Operations Dashboard</title>
+<title>Lab Dashboard</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #0d0f16;
-    color: #e2e4ee;
-    min-height: 100vh;
-    padding: 20px 28px 32px;
-    overflow-x: hidden;
-  }
-
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 22px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid #1f2230;
-  }
-  .header h1 { font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: 0.3px; }
-  .header-right { display: flex; align-items: center; gap: 16px; }
-  .live-badge {
-    display: flex; align-items: center; gap: 7px;
-    background: #0f2e1a; border: 1px solid #1a5c32;
-    border-radius: 20px; padding: 5px 12px;
-    font-size: 12px; color: #4ade80; font-weight: 600; letter-spacing: 0.5px;
-  }
-  .live-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #22c55e; animation: pulse 2s infinite;
-  }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a242b; color: #e2e8ec; min-height: 100vh; padding: 22px 28px 32px; overflow-x: hidden; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 2px solid #f68b20; }
+  .header h1 { font-size: 28px; font-weight: 700; color: #fff; }
+  .header-right { display: flex; align-items: center; gap: 14px; }
+  .live-badge { display: flex; align-items: center; gap: 7px; background: rgba(246,139,32,0.12); border: 1px solid rgba(246,139,32,0.35); border-radius: 6px; padding: 6px 14px; font-size: 13px; color: #f68b20; font-weight: 700; letter-spacing: 0.8px; }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #f68b20; animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .last-updated { font-size: 12px; color: #4b5070; }
-
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
-    margin-bottom: 26px;
-  }
-  .summary-card {
-    background: #151825; border: 1px solid #1f2230;
-    border-radius: 10px; padding: 16px 20px;
-  }
-  .summary-card .label {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.8px;
-    text-transform: uppercase; color: #4b5070; margin-bottom: 8px;
-  }
-  .summary-card .value { font-size: 34px; font-weight: 700; color: #ffffff; line-height: 1; }
-  .summary-card .sub   { font-size: 12px; color: #4b5070; margin-top: 4px; }
-  .summary-card.highlight .value { color: #60a5fa; }
-  .summary-card.success .value   { color: #4ade80; }
-
-  .team-stage { position: relative; min-height: 380px; }
-  .team-panel { display: none; animation: fadein 0.5s ease; }
+  .last-updated { font-size: 13px; color: #4a5a64; }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; margin-bottom: 26px; background: #222e37; border-radius: 10px; overflow: hidden; }
+  .summary-card { padding: 20px 24px; border-right: 1px solid #2a3640; }
+  .summary-card:last-child { border-right: none; }
+  .summary-card .label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4a5a64; margin-bottom: 8px; }
+  .summary-card .value { font-size: 42px; font-weight: 700; color: #fff; line-height: 1; }
+  .summary-card.orange .value { color: #f68b20; }
+  .summary-card.red .value { color: #f15d25; }
+  .summary-card.green .value { color: #22c55e; }
+  .summary-card.yellow .value { color: #eab308; }
+  .summary-card .sub { font-size: 12px; color: #3a4a54; margin-top: 6px; }
+  .team-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4a5a64; margin-bottom: 12px; }
+  .team-stage { position: relative; min-height: 400px; }
+  .team-panel { display: none; animation: fadein 0.4s ease; }
   .team-panel.active { display: block; }
-  @keyframes fadein { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-
-  .team-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 14px;
-  }
-  .team-title { font-size: 18px; font-weight: 700; color: #ffffff; }
-  .team-stats-inline { display: flex; gap: 20px; font-size: 13px; }
-  .team-stats-inline strong { color: #e2e4ee; }
-  .team-stats-inline span  { color: #4b5070; }
-
-  .tech-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  .tech-table thead tr { border-bottom: 1px solid #1f2230; }
-  .tech-table th {
-    text-align: left; padding: 9px 14px;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.7px;
-    text-transform: uppercase; color: #4b5070;
-  }
-  .tech-table th.num { text-align: right; }
-  .tech-table tbody tr { border-bottom: 1px solid #151825; }
-  .tech-table tbody tr:hover { background: #151825; }
-  .tech-table td { padding: 11px 14px; color: #c8ccdf; }
-  .tech-table td.num { text-align: right; color: #e2e4ee; font-variant-numeric: tabular-nums; }
-
-  .tech-name  { font-weight: 600; color: #ffffff; font-size: 14px; }
-  .tech-title { font-size: 11px; color: #4b5070; margin-top: 2px; }
-
-  .pct-badge {
-    display: inline-block; padding: 3px 10px; border-radius: 20px;
-    font-size: 12px; font-weight: 700; min-width: 52px; text-align: center;
-  }
-  .pct-high { background: #0f2e1a; color: #4ade80; border: 1px solid #166534; }
-  .pct-mid  { background: #1c2010; color: #a3e635; border: 1px solid #3a5212; }
-  .pct-low  { background: #2a1810; color: #fb923c; border: 1px solid #7c2d12; }
-  .pct-zero { background: #1a1a1a; color: #6b7280; border: 1px solid #2d2d2d; }
-
-  .team-nav {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-top: 20px; padding-top: 14px; border-top: 1px solid #1f2230;
-  }
+  @keyframes fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .team-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .team-name { font-size: 20px; font-weight: 700; color: #f68b20; text-transform: uppercase; letter-spacing: 1px; }
+  .team-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .team-pill { font-size: 13px; color: #7a8a94; background: #222e37; border-radius: 5px; padding: 5px 12px; }
+  .team-pill strong { color: #c8d4da; }
+  .tech-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .tech-card { background: #222e37; border-radius: 10px; padding: 18px 20px; border-left: 5px solid #2a3a44; }
+  .tech-card.hi  { border-left-color: #22c55e; }
+  .tech-card.mid { border-left-color: #eab308; }
+  .tech-card.lo  { border-left-color: #f15d25; }
+  .tech-card-top { margin-bottom: 16px; }
+  .tech-card-name { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+  .tech-card-level { display: inline-block; font-size: 13px; font-weight: 600; color: #5a6a74; background: #1a242b; border-radius: 4px; padding: 3px 10px; }
+  .tech-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tech-stat { text-align: center; background: #1a242b; border-radius: 8px; padding: 12px 6px; }
+  .tech-stat .sv { font-size: 28px; font-weight: 700; color: #c8d4da; line-height: 1; }
+  .tech-stat .sv.green  { color: #22c55e; }
+  .tech-stat .sv.yellow { color: #eab308; }
+  .tech-stat .sv.red    { color: #f15d25; }
+  .tech-stat .sl { font-size: 12px; font-weight: 700; color: #4a5a64; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 6px; }
+  .team-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; padding-top: 16px; border-top: 1px solid #222e37; }
   .team-dots { display: flex; gap: 8px; align-items: center; }
-  .team-dot {
-    width: 28px; height: 4px; border-radius: 2px;
-    background: #1f2230; cursor: pointer; transition: background 0.2s;
-  }
-  .team-dot.active { background: #60a5fa; }
-  .nav-buttons { display: flex; gap: 10px; }
-  .nav-btn {
-    background: #151825; border: 1px solid #1f2230; border-radius: 8px;
-    color: #9ca3c4; padding: 6px 16px; font-size: 13px; cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-  }
-  .nav-btn:hover { background: #1f2230; color: #ffffff; }
-  .progress-bar-wrap {
-    flex: 1; margin: 0 20px; height: 3px;
-    background: #1f2230; border-radius: 2px; overflow: hidden;
-  }
-  .progress-bar-fill {
-    height: 100%; background: #60a5fa; border-radius: 2px; transition: width 0.3s linear;
-  }
-
-  .config-banner {
-    background: #1a1500; border: 1px solid #3d2e00; border-radius: 8px;
-    padding: 14px 18px; font-size: 13px; color: #fbbf24; margin-bottom: 20px; display: none;
-  }
-  code { background: #1f2230; border-radius: 4px; padding: 1px 6px; font-size: 12px; color: #93c5fd; }
-  .state-msg { text-align: center; padding: 60px 20px; color: #4b5070; font-size: 15px; }
+  .team-dot { height: 4px; width: 28px; border-radius: 2px; background: #222e37; cursor: pointer; transition: all 0.2s; }
+  .team-dot.active { background: #f68b20; width: 44px; }
+  .nav-btn { background: #222e37; border: 1px solid #2a3640; border-radius: 8px; color: #c8d4da; padding: 8px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .nav-btn:hover { background: #f68b20; color: #1a242b; border-color: #f68b20; }
+  .progress-bar-wrap { flex: 1; margin: 0 20px; height: 3px; background: #222e37; border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: #f68b20; border-radius: 2px; }
+  .config-banner { background: #2a1e00; border: 1px solid #f68b20; border-radius: 8px; padding: 12px 18px; font-size: 13px; color: #f68b20; margin-bottom: 20px; display: none; }
+  code { background: #1a242b; border-radius: 4px; padding: 1px 6px; font-size: 12px; color: #f15d25; }
+  .state-msg { text-align: center; padding: 60px 20px; color: #4a5a64; font-size: 15px; }
+  /* Summary overview panel */
+  .summary-panel-title { font-size: 16px; font-weight: 700; color: #f68b20; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+  .teams-table-wrap { background: #222e37; border-radius: 10px; overflow: hidden; }
+  .teams-table { width: 100%; border-collapse: collapse; }
+  .teams-table th { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4a5a64; padding: 10px 16px; text-align: left; border-bottom: 2px solid #2a3640; }
+  .teams-table th:not(:first-child) { text-align: center; }
+  .teams-table td { padding: 13px 16px; border-bottom: 1px solid #1a242b; font-size: 15px; font-weight: 600; color: #c8d4da; }
+  .teams-table td:not(:first-child) { text-align: center; }
+  .teams-table tr:last-child td { border-bottom: none; }
+  .teams-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .team-name-cell { font-size: 15px; font-weight: 700; color: #f68b20 !important; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pct-cell.green { color: #22c55e; }
+  .pct-cell.yellow { color: #eab308; }
+  .pct-cell.red { color: #f15d25; }
 </style>
 </head>
 <body>
-
 <script>
-  const APPS_SCRIPT_URL   = "https://script.google.com/a/macros/repairbit.io/s/AKfycbwGVtzMeztx5KhqINxUw1PA7Tsw_ffInr5a0VFs4UlHr5JdhTEJutRDHbTro_uygfNNvA/exec";
-  const REFRESH_MS        = 30000;
-  const TEAM_ROTATE_MS    = 30000;
+  const APPS_SCRIPT_URL = "https://script.google.com/a/macros/repairbit.io/s/AKfycbwGVtzMeztx5KhqINxUw1PA7Tsw_ffInr5a0VFs4UlHr5JdhTEJutRDHbTro_uygfNNvA/exec";
+  const REFRESH_MS     = 30000;
+  const TEAM_ROTATE_MS = 15000;
 </script>
-
-<div class="config-banner" id="configBanner" style="display: block;">
-  ⚠&nbsp; Dashboard is showing <strong>demo data</strong>. Replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> with your published Apps Script URL to go live.
-</div>
-
-<div class="header">
-  <h1>Lab Operations Dashboard</h1>
-  <div class="header-right">
-    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-    <div class="last-updated" id="lastUpdated">Demo data — not connected to sheet</div>
-  </div>
-</div>
-
+<div class="config-banner" id="configBanner">&#9888;&nbsp; Showing demo data. Replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> with your Apps Script URL.</div>
+<div class="header"><h1>Lab Dashboard</h1><div class="header-right">
+  <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  <div class="last-updated" id="lastUpdated">Connecting...</div>
+</div></div>
 <div class="summary-grid">
-  <div class="summary-card">
-    <div class="label">Total Touches</div>
-    <div class="value" id="s-touches">430</div>
-    <div class="sub">All lab rows</div>
-  </div>
-  <div class="summary-card highlight">
-    <div class="label">Unique Touches</div>
-    <div class="value" id="s-unique">430</div>
-    <div class="sub">Distinct serial numbers</div>
-  </div>
-  <div class="summary-card">
-    <div class="label">Total Repairs</div>
-    <div class="value" id="s-repairs">275</div>
-    <div class="sub">Repaired outcomes</div>
-  </div>
-  <div class="summary-card success">
-    <div class="label">Overall Repair %</div>
-    <div class="value" id="s-pct">64%</div>
-    <div class="sub">Repairs ÷ unique touches</div>
-  </div>
+  <div class="summary-card orange"><div class="label">Total Touches</div><div class="value" id="s-touches">—</div><div class="sub">All lab activity</div></div>
+  <div class="summary-card"><div class="label">Unique Touches</div><div class="value" id="s-unique">—</div><div class="sub">Distinct serial numbers</div></div>
+  <div class="summary-card"><div class="label">Total Repairs</div><div class="value" id="s-repairs">—</div><div class="sub">Repaired outcomes</div></div>
+  <div class="summary-card" id="s-pct-card"><div class="label">Overall Repair %</div><div class="value" id="s-pct">—</div><div class="sub">Repairs / unique touches</div></div>
 </div>
-
-<div class="team-stage" id="teamStage"><div class="team-panel" id="team-0">
-      <div class="team-header">
-        <div class="team-title">Team 1</div>
-        <div class="team-stats-inline">
-          <div><strong>6</strong> <span>techs</span></div>
-          <div><strong>79</strong> <span>touches</span></div>
-          <div><strong>46</strong> <span>repairs</span></div>
-          <div><strong>58%</strong> <span>repair rate</span></div>
-        </div>
-      </div>
-      <table class="tech-table">
-        <thead><tr>
-          <th>Tech / Title</th>
-          <th class="num">Touches</th>
-          <th class="num">Repairs</th>
-          <th class="num">Give-Ups</th>
-          <th class="num">Graveyards</th>
-          <th class="num">Repair %</th>
-        </tr></thead>
-        <tbody><tr>
-        <td>
-          <div class="tech-name">Alex P</div>
-          <div class="tech-title">Lead</div>
-        </td>
-        <td class="num">8</td>
-        <td class="num">3</td>
-        <td class="num">3</td>
-        <td class="num">2</td>
-        <td class="num"><span class="pct-badge pct-low">38%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Casey T</div>
-          <div class="tech-title">L3 Tech</div>
-        </td>
-        <td class="num">10</td>
-        <td class="num">5</td>
-        <td class="num">3</td>
-        <td class="num">2</td>
-        <td class="num"><span class="pct-badge pct-low">50%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Jordan M</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">19</td>
-        <td class="num">13</td>
-        <td class="num">3</td>
-        <td class="num">3</td>
-        <td class="num"><span class="pct-badge pct-mid">68%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Morgan W</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">17</td>
-        <td class="num">9</td>
-        <td class="num">5</td>
-        <td class="num">3</td>
-        <td class="num"><span class="pct-badge pct-low">53%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Riley S</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">14</td>
-        <td class="num">9</td>
-        <td class="num">2</td>
-        <td class="num">3</td>
-        <td class="num"><span class="pct-badge pct-mid">64%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Sam H</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">11</td>
-        <td class="num">7</td>
-        <td class="num">2</td>
-        <td class="num">2</td>
-        <td class="num"><span class="pct-badge pct-mid">64%</span></td>
-      </tr></tbody>
-      </table></div><div class="team-panel active" id="team-1">
-      <div class="team-header">
-        <div class="team-title">Team 2</div>
-        <div class="team-stats-inline">
-          <div><strong>6</strong> <span>techs</span></div>
-          <div><strong>95</strong> <span>touches</span></div>
-          <div><strong>67</strong> <span>repairs</span></div>
-          <div><strong>71%</strong> <span>repair rate</span></div>
-        </div>
-      </div>
-      <table class="tech-table">
-        <thead><tr>
-          <th>Tech / Title</th>
-          <th class="num">Touches</th>
-          <th class="num">Repairs</th>
-          <th class="num">Give-Ups</th>
-          <th class="num">Graveyards</th>
-          <th class="num">Repair %</th>
-        </tr></thead>
-        <tbody><tr>
-        <td>
-          <div class="tech-name">Avery C</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">15</td>
-        <td class="num">9</td>
-        <td class="num">4</td>
-        <td class="num">2</td>
-        <td class="num"><span class="pct-badge pct-mid">60%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Drew K</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">19</td>
-        <td class="num">14</td>
-        <td class="num">4</td>
-        <td class="num">1</td>
-        <td class="num"><span class="pct-badge pct-mid">74%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Jamie L</div>
-          <div class="tech-title">L3 Tech</div>
-        </td>
-        <td class="num">19</td>
-        <td class="num">13</td>
-        <td class="num">3</td>
-        <td class="num">3</td>
-        <td class="num"><span class="pct-badge pct-mid">68%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Pat N</div>
-          <div class="tech-title">Lead</div>
-        </td>
-        <td class="num">14</td>
-        <td class="num">10</td>
-        <td class="num">4</td>
-        <td class="num">0</td>
-        <td class="num"><span class="pct-badge pct-mid">71%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Quinn B</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">11</td>
-        <td class="num">10</td>
-        <td class="num">0</td>
-        <td class="num">1</td>
-        <td class="num"><span class="pct-badge pct-high">91%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Taylor R</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">17</td>
-        <td class="num">11</td>
-        <td class="num">2</td>
-        <td class="num">4</td>
-        <td class="num"><span class="pct-badge pct-mid">65%</span></td>
-      </tr></tbody>
-      </table></div><div class="team-panel" id="team-2">
-      <div class="team-header">
-        <div class="team-title">Team 3</div>
-        <div class="team-stats-inline">
-          <div><strong>6</strong> <span>techs</span></div>
-          <div><strong>92</strong> <span>touches</span></div>
-          <div><strong>59</strong> <span>repairs</span></div>
-          <div><strong>64%</strong> <span>repair rate</span></div>
-        </div>
-      </div>
-      <table class="tech-table">
-        <thead><tr>
-          <th>Tech / Title</th>
-          <th class="num">Touches</th>
-          <th class="num">Repairs</th>
-          <th class="num">Give-Ups</th>
-          <th class="num">Graveyards</th>
-          <th class="num">Repair %</th>
-        </tr></thead>
-        <tbody><tr>
-        <td>
-          <div class="tech-name">Blake F</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">17</td>
-        <td class="num">12</td>
-        <td class="num">2</td>
-        <td class="num">3</td>
-        <td class="num"><span class="pct-badge pct-mid">71%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Charlie G</div>
-          <div class="tech-title">Lead</div>
-        </td>
-        <td class="num">19</td>
-        <td class="num">12</td>
-        <td class="num">6</td>
-        <td class="num">1</td>
-        <td class="num"><span class="pct-badge pct-mid">63%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Devon A</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">18</td>
-        <td class="num">10</td>
-        <td class="num">4</td>
-        <td class="num">4</td>
-        <td class="num"><span class="pct-badge pct-low">56%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Frankie J</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">9</td>
-        <td class="num">6</td>
-        <td class="num">0</td>
-        <td class="num">3</td>
-        <td class="num"><span class="pct-badge pct-mid">67%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Reese O</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">13</td>
-        <td class="num">8</td>
-        <td class="num">2</td>
-        <td class="num">3</td>
-        <td class="num"><span class="pct-badge pct-mid">62%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Skyler D</div>
-          <div class="tech-title">L3 Tech</div>
-        </td>
-        <td class="num">16</td>
-        <td class="num">11</td>
-        <td class="num">1</td>
-        <td class="num">4</td>
-        <td class="num"><span class="pct-badge pct-mid">69%</span></td>
-      </tr></tbody>
-      </table></div><div class="team-panel" id="team-3">
-      <div class="team-header">
-        <div class="team-title">Team 4</div>
-        <div class="team-stats-inline">
-          <div><strong>6</strong> <span>techs</span></div>
-          <div><strong>81</strong> <span>touches</span></div>
-          <div><strong>51</strong> <span>repairs</span></div>
-          <div><strong>63%</strong> <span>repair rate</span></div>
-        </div>
-      </div>
-      <table class="tech-table">
-        <thead><tr>
-          <th>Tech / Title</th>
-          <th class="num">Touches</th>
-          <th class="num">Repairs</th>
-          <th class="num">Give-Ups</th>
-          <th class="num">Graveyards</th>
-          <th class="num">Repair %</th>
-        </tr></thead>
-        <tbody><tr>
-        <td>
-          <div class="tech-name">Emery Z</div>
-          <div class="tech-title">L3 Tech</div>
-        </td>
-        <td class="num">11</td>
-        <td class="num">9</td>
-        <td class="num">1</td>
-        <td class="num">1</td>
-        <td class="num"><span class="pct-badge pct-high">82%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Harley V</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">16</td>
-        <td class="num">14</td>
-        <td class="num">1</td>
-        <td class="num">1</td>
-        <td class="num"><span class="pct-badge pct-high">88%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Logan U</div>
-          <div class="tech-title">Lead</div>
-        </td>
-        <td class="num">16</td>
-        <td class="num">12</td>
-        <td class="num">2</td>
-        <td class="num">2</td>
-        <td class="num"><span class="pct-badge pct-mid">75%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Peyton I</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">9</td>
-        <td class="num">3</td>
-        <td class="num">4</td>
-        <td class="num">2</td>
-        <td class="num"><span class="pct-badge pct-low">33%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Rowan X</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">14</td>
-        <td class="num">7</td>
-        <td class="num">2</td>
-        <td class="num">5</td>
-        <td class="num"><span class="pct-badge pct-low">50%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Sage Y</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">15</td>
-        <td class="num">6</td>
-        <td class="num">5</td>
-        <td class="num">4</td>
-        <td class="num"><span class="pct-badge pct-low">40%</span></td>
-      </tr></tbody>
-      </table></div><div class="team-panel" id="team-4">
-      <div class="team-header">
-        <div class="team-title">Team 5</div>
-        <div class="team-stats-inline">
-          <div><strong>6</strong> <span>techs</span></div>
-          <div><strong>83</strong> <span>touches</span></div>
-          <div><strong>52</strong> <span>repairs</span></div>
-          <div><strong>63%</strong> <span>repair rate</span></div>
-        </div>
-      </div>
-      <table class="tech-table">
-        <thead><tr>
-          <th>Tech / Title</th>
-          <th class="num">Touches</th>
-          <th class="num">Repairs</th>
-          <th class="num">Give-Ups</th>
-          <th class="num">Graveyards</th>
-          <th class="num">Repair %</th>
-        </tr></thead>
-        <tbody><tr>
-        <td>
-          <div class="tech-name">Arlo S</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">9</td>
-        <td class="num">6</td>
-        <td class="num">3</td>
-        <td class="num">0</td>
-        <td class="num"><span class="pct-badge pct-mid">67%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Cam E</div>
-          <div class="tech-title">L3 Tech</div>
-        </td>
-        <td class="num">13</td>
-        <td class="num">8</td>
-        <td class="num">1</td>
-        <td class="num">4</td>
-        <td class="num"><span class="pct-badge pct-mid">62%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Finley Q</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">16</td>
-        <td class="num">9</td>
-        <td class="num">2</td>
-        <td class="num">5</td>
-        <td class="num"><span class="pct-badge pct-low">56%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Kendall W</div>
-          <div class="tech-title">L2 Tech</div>
-        </td>
-        <td class="num">8</td>
-        <td class="num">5</td>
-        <td class="num">1</td>
-        <td class="num">2</td>
-        <td class="num"><span class="pct-badge pct-mid">63%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Remy R</div>
-          <div class="tech-title">Lead</div>
-        </td>
-        <td class="num">18</td>
-        <td class="num">12</td>
-        <td class="num">3</td>
-        <td class="num">3</td>
-        <td class="num"><span class="pct-badge pct-mid">67%</span></td>
-      </tr><tr>
-        <td>
-          <div class="tech-name">Shay T</div>
-          <div class="tech-title">L1 Tech</div>
-        </td>
-        <td class="num">19</td>
-        <td class="num">12</td>
-        <td class="num">3</td>
-        <td class="num">4</td>
-        <td class="num"><span class="pct-badge pct-mid">63%</span></td>
-      </tr></tbody>
-      </table></div></div>
-
-<div class="team-nav" id="teamNav" style="display: flex;">
-  <button class="nav-btn" onclick="navigate(-1)">← Prev</button>
-  <div class="team-dots" id="teamDots"><div class="team-dot" onclick="goToTeam(0)" title="Team 1"></div><div class="team-dot active" onclick="goToTeam(1)" title="Team 2"></div><div class="team-dot" onclick="goToTeam(2)" title="Team 3"></div><div class="team-dot" onclick="goToTeam(3)" title="Team 4"></div><div class="team-dot" onclick="goToTeam(4)" title="Team 5"></div></div>
-  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width: 87.7077%;"></div></div>
-  <button class="nav-btn" onclick="navigate(1)">Next →</button>
+<div class="team-label">Teams</div>
+<div class="team-stage" id="teamStage"><div class="state-msg">Loading team data...</div></div>
+<div class="team-nav" id="teamNav" style="display:none;">
+  <button class="nav-btn" onclick="navigate(-1)">&#8592; Prev</button>
+  <div class="team-dots" id="teamDots"></div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar"></div></div>
+  <button class="nav-btn" onclick="navigate(1)">Next &#8594;</button>
 </div>
-
 <script>
-let allData      = [];
-let teams        = [];
-let currentTeam  = 0;
-let rotateTimer  = null;
-let progTimer    = null;
-let progStart    = null;
+let allData=[], teams=[], currentTeam=0, rotateTimer=null, progTimer=null, progStart=null;
 
 async function fetchData() {
   if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
     document.getElementById("configBanner").style.display = "block";
-    useDemoData();
-    return;
+    useDemoData(); return;
   }
   try {
-    const res  = await fetch(APPS_SCRIPT_URL + "?t=" + Date.now());
+    const res = await fetch(APPS_SCRIPT_URL + "?t=" + Date.now());
     const json = await res.json();
     allData = json.rows || [];
     renderAll();
-    document.getElementById("lastUpdated").textContent =
-      "Updated " + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    document.getElementById("lastUpdated").textContent = "Updated " + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   } catch(e) {
     document.getElementById("lastUpdated").textContent = "Connection error — retrying...";
   }
@@ -610,7 +122,7 @@ async function fetchData() {
 
 function computeLabSummary(rows) {
   const touches = rows.length;
-  const unique  = new Set(rows.map(r => r.SerialNumber).filter(Boolean)).size;
+  const unique  = new Set(rows.map(r => r["Serial Number"]).filter(Boolean)).size;
   const repairs = rows.filter(r => r.Outcome === "Repaired").length;
   const pct     = unique > 0 ? Math.round((repairs / unique) * 100) : 0;
   return { touches, unique, repairs, pct };
@@ -631,10 +143,13 @@ function renderAll() {
   document.getElementById("s-unique").textContent  = lab.unique.toLocaleString();
   document.getElementById("s-repairs").textContent = lab.repairs.toLocaleString();
   document.getElementById("s-pct").textContent     = lab.pct + "%";
+  const pctCard = document.getElementById("s-pct-card");
+  pctCard.classList.remove("green", "yellow", "red");
+  pctCard.classList.add(lab.pct >= 75 ? "green" : lab.pct > 50 ? "yellow" : "red");
 
   const teamMap = {};
   allData.forEach(row => {
-    const t = row.Team || "Unassigned";
+    const t = row.Team || ""; if (!t) return;
     const n = row.Name || "Unknown";
     if (!teamMap[t]) teamMap[t] = {};
     if (!teamMap[t][n]) teamMap[t][n] = { rows: [], level: row.Level || "" };
@@ -650,70 +165,107 @@ function renderAll() {
   const stage = document.getElementById("teamStage");
   stage.innerHTML = "";
 
-  teams.forEach((team, idx) => {
-    const techMap   = teamMap[team];
-    const techNames = Object.keys(techMap).sort();
-    const teamRows  = techNames.flatMap(n => techMap[n].rows);
-    const tRepairs  = teamRows.filter(r => r.Outcome === "Repaired").length;
-    const tPct      = teamRows.length > 0 ? Math.round((tRepairs / teamRows.length) * 100) : 0;
+  // --- Page 0: All Teams Summary ---
+  const summaryPanel = document.createElement("div");
+  summaryPanel.className = "team-panel" + (currentTeam === 0 ? " active" : "");
+  summaryPanel.id = "team-0";
 
-    const rowsHTML = techNames.map(name => {
+  const tableRows = teams.map(team => {
+    const techMap  = teamMap[team];
+    const teamRows = Object.values(techMap).flatMap(t => t.rows);
+    const repairs  = teamRows.filter(r => r.Outcome === "Repaired").length;
+    const giveups  = teamRows.filter(r => r.Outcome === "Give Up").length;
+    const grave    = teamRows.filter(r => r.Outcome === "Graveyard").length;
+    const pct      = teamRows.length > 0 ? Math.round((repairs / teamRows.length) * 100) : 0;
+    const pctCls   = pct >= 75 ? "green" : pct > 50 ? "yellow" : "red";
+    const techs    = Object.keys(techMap).length;
+    return '<tr>' +
+      '<td class="team-name-cell">' + esc(team) + '</td>' +
+      '<td>' + techs + '</td>' +
+      '<td>' + teamRows.length.toLocaleString() + '</td>' +
+      '<td>' + repairs.toLocaleString() + '</td>' +
+      '<td>' + giveups + '</td>' +
+      '<td>' + grave + '</td>' +
+      '<td class="pct-cell ' + pctCls + '">' + pct + '%</td>' +
+      '</tr>';
+  }).join("");
+
+  summaryPanel.innerHTML =
+    '<div class="summary-panel-title">All Teams Overview</div>' +
+    '<div class="teams-table-wrap">' +
+    '<table class="teams-table"><thead><tr>' +
+    '<th>Team</th><th>Techs</th><th>Touches</th><th>Repairs</th><th>Give-Ups</th><th>Graveyards</th><th>Repair %</th>' +
+    '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
+    '</div>';
+  stage.appendChild(summaryPanel);
+
+  // --- Pages 1+: Individual teams ---
+  teams.forEach((team, idx) => {
+    const panelIdx = idx + 1;
+    const techMap = teamMap[team];
+    const techNames = Object.keys(techMap).sort((a, b) => {
+      const sa = computeTechStats(techMap[a].rows);
+      const sb = computeTechStats(techMap[b].rows);
+      if (sb.repairs !== sa.repairs) return sb.repairs - sa.repairs;
+      return sb.pct - sa.pct;
+    });
+    const teamRows = techNames.flatMap(n => techMap[n].rows);
+    const tRepairs = teamRows.filter(r => r.Outcome === "Repaired").length;
+    const tGiveups = teamRows.filter(r => r.Outcome === "Give Up").length;
+    const tGrave   = teamRows.filter(r => r.Outcome === "Graveyard").length;
+    const tPct     = teamRows.length > 0 ? Math.round((tRepairs / teamRows.length) * 100) : 0;
+
+    const cardsHTML = techNames.map(name => {
       const s = computeTechStats(techMap[name].rows);
       const level = techMap[name].level;
-      const cls = s.pct >= 80 ? "pct-high" : s.pct >= 60 ? "pct-mid" : s.pct > 0 ? "pct-low" : "pct-zero";
-      return `<tr>
-        <td>
-          <div class="tech-name">${esc(name)}</div>
-          ${level ? `<div class="tech-title">${esc(level)}</div>` : ""}
-        </td>
-        <td class="num">${s.touches}</td>
-        <td class="num">${s.repairs}</td>
-        <td class="num">${s.giveups}</td>
-        <td class="num">${s.graveyards}</td>
-        <td class="num"><span class="pct-badge ${cls}">${s.pct}%</span></td>
-      </tr>`;
+      const cls = s.pct >= 75 ? "hi" : s.pct > 50 ? "mid" : "lo";
+      const pctColor = s.pct >= 75 ? "green" : s.pct > 50 ? "yellow" : "red";
+      return '<div class="tech-card ' + cls + '">' +
+        '<div class="tech-card-top">' +
+        '<div class="tech-card-name">' + esc(name) + '</div>' +
+        (level ? '<span class="tech-card-level">' + esc(level) + '</span>' : '') +
+        '</div>' +
+        '<div class="tech-stats">' +
+        '<div class="tech-stat"><div class="sv">' + s.touches + '</div><div class="sl">Touches</div></div>' +
+        '<div class="tech-stat"><div class="sv">' + s.repairs + '</div><div class="sl">Repairs</div></div>' +
+        '<div class="tech-stat"><div class="sv">' + s.giveups + '</div><div class="sl">Give-Ups</div></div>' +
+        '<div class="tech-stat"><div class="sv ' + pctColor + '">' + s.pct + '%</div><div class="sl">Repair %</div></div>' +
+        '</div></div>';
     }).join("");
 
     const panel = document.createElement("div");
-    panel.className = "team-panel" + (idx === currentTeam ? " active" : "");
-    panel.id = "team-" + idx;
-    panel.innerHTML = `
-      <div class="team-header">
-        <div class="team-title">${esc(team)}</div>
-        <div class="team-stats-inline">
-          <div><strong>${techNames.length}</strong> <span>techs</span></div>
-          <div><strong>${teamRows.length.toLocaleString()}</strong> <span>touches</span></div>
-          <div><strong>${tRepairs.toLocaleString()}</strong> <span>repairs</span></div>
-          <div><strong>${tPct}%</strong> <span>repair rate</span></div>
-        </div>
-      </div>
-      <table class="tech-table">
-        <thead><tr>
-          <th>Tech / Title</th>
-          <th class="num">Touches</th>
-          <th class="num">Repairs</th>
-          <th class="num">Give-Ups</th>
-          <th class="num">Graveyards</th>
-          <th class="num">Repair %</th>
-        </tr></thead>
-        <tbody>${rowsHTML}</tbody>
-      </table>`;
+    panel.className = "team-panel" + (panelIdx === currentTeam ? " active" : "");
+    panel.id = "team-" + panelIdx;
+    panel.innerHTML =
+      '<div class="team-header">' +
+      '<div class="team-name">' + esc(team) + '</div>' +
+      '<div class="team-pills">' +
+      '<div class="team-pill"><strong>' + techNames.length + '</strong> techs</div>' +
+      '<div class="team-pill"><strong>' + teamRows.length.toLocaleString() + '</strong> touches</div>' +
+      '<div class="team-pill"><strong>' + tRepairs.toLocaleString() + '</strong> repairs</div>' +
+      '<div class="team-pill"><strong>' + tGiveups + '</strong> give-ups</div>' +
+      '<div class="team-pill"><strong>' + tGrave + '</strong> graveyards</div>' +
+      '<div class="team-pill"><strong>' + tPct + '%</strong> repair rate</div>' +
+      '</div></div>' +
+      '<div class="tech-grid">' + cardsHTML + '</div>';
     stage.appendChild(panel);
   });
 
+  const totalPages = teams.length + 1;
   const dotsEl = document.getElementById("teamDots");
-  dotsEl.innerHTML = teams.map((t, i) =>
-    `<div class="team-dot${i === currentTeam ? " active" : ""}" onclick="goToTeam(${i})" title="${esc(t)}"></div>`
+  dotsEl.innerHTML = Array.from({length: totalPages}, (_, i) =>
+    '<div class="team-dot' + (i === currentTeam ? " active" : "") + '" onclick="goToTeam(' + i + ')" title="' + (i === 0 ? "Overview" : esc(teams[i - 1])) + '"></div>'
   ).join("");
 
-  document.getElementById("teamNav").style.display = teams.length > 1 ? "flex" : "none";
+  document.getElementById("teamNav").style.display = totalPages > 1 ? "flex" : "none";
   startRotation();
 }
 
 function goToTeam(idx) {
+  const totalPages = teams.length + 1;
   document.querySelectorAll(".team-panel").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".team-dot").forEach(d => d.classList.remove("active"));
-  currentTeam = ((idx % teams.length) + teams.length) % teams.length;
+  currentTeam = ((idx % totalPages) + totalPages) % totalPages;
   const panel = document.getElementById("team-" + currentTeam);
   if (panel) panel.classList.add("active");
   const dots = document.querySelectorAll(".team-dot");
@@ -742,13 +294,11 @@ function animateProgress() {
 }
 
 function esc(str) {
-  return String(str)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
 function useDemoData() {
-  const tNames = ["Team 1","Team 2","Team 3","Team 4","Team 5"];
+  const tNames = ["Team 1","Team 2","Team 3","Team 4","Training"];
   const levels = ["L1 Tech","L2 Tech","L3 Tech","Lead"];
   const outcomes = ["Repaired","Repaired","Repaired","Repaired","Give Up","Graveyard"];
   const names = [
@@ -764,11 +314,9 @@ function useDemoData() {
       const level = levels[ni % levels.length];
       const count = 8 + Math.floor(Math.random() * 12);
       for (let i = 0; i < count; i++) {
-        rows.push({
-          Name: name, Level: level, Team: team,
-          SerialNumber: "SN" + (1000 + ti*200 + ni*30 + i),
-          Outcome: outcomes[Math.floor(Math.random() * outcomes.length)]
-        });
+        rows.push({ Name: name, Level: level, Team: team,
+          "Serial Number": "SN" + (1000 + ti*200 + ni*30 + i),
+          Outcome: outcomes[Math.floor(Math.random() * outcomes.length)] });
       }
     });
   });
@@ -780,6 +328,5 @@ function useDemoData() {
 fetchData();
 setInterval(fetchData, REFRESH_MS);
 </script>
-
-
-</body></html>
+</body>
+</html>
