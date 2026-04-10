@@ -105,12 +105,23 @@
 <script>
 let allData=[], teams=[], currentTeam=0, rotateTimer=null, progTimer=null, progStart=null;
 
-// Parse a time string like "8:30 AM" or "14:05" into today's Date object
+// Parse a time value into today's Date object.
+// Handles ISO strings like "1899-12-30T12:49:00.000Z" (Google Sheets serial times)
+// as well as plain strings like "8:30 AM" or "14:05"
 function parseTimeToDate(timeStr) {
   if (!timeStr) return null;
   try {
     const s = String(timeStr).trim();
-    // Handle "HH:MM:SS AM/PM" or "HH:MM AM/PM" or "HH:MM:SS" or "HH:MM"
+
+    // Google Sheets ISO format: "1899-12-30T12:49:00.000Z"
+    const iso = s.match(/T(\d{2}):(\d{2}):(\d{2})/);
+    if (iso) {
+      const d = new Date();
+      d.setHours(parseInt(iso[1], 10), parseInt(iso[2], 10), parseInt(iso[3], 10), 0);
+      return d;
+    }
+
+    // Plain time string: "8:30 AM", "14:05", "08:30:00"
     const m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
     if (!m) return null;
     let h = parseInt(m[1], 10);
@@ -128,11 +139,6 @@ function parseTimeToDate(timeStr) {
 // Uses the earliest Start time across all rows. Caps at 6.5 hours.
 function computeHoursWorked(rows) {
   const MAX_HOURS = 6.5;
-  // Debug: log first row keys to console so we can see exact field names
-  if (rows.length > 0) {
-    console.log("Row keys:", Object.keys(rows[0]));
-    console.log("Sample row:", JSON.stringify(rows[0]));
-  }
   let earliest = null;
   for (const r of rows) {
     const t = parseTimeToDate(r["Start Time"]);
