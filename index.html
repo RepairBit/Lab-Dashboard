@@ -128,14 +128,19 @@ function parseTimeToDate(timeStr) {
 // Uses the earliest Start time across all rows. Caps at 6.5 hours.
 function computeHoursWorked(rows) {
   const MAX_HOURS = 6.5;
+  // Debug: log first row keys to console so we can see exact field names
+  if (rows.length > 0) {
+    console.log("Row keys:", Object.keys(rows[0]));
+    console.log("Sample row:", JSON.stringify(rows[0]));
+  }
   let earliest = null;
   for (const r of rows) {
     const t = parseTimeToDate(r["Start Time"]);
     if (t && (!earliest || t < earliest)) earliest = t;
   }
-  if (!earliest) return null; // no time data
+  if (!earliest) return null;
   const now = new Date();
-  const elapsed = (now - earliest) / 3600000; // hours
+  const elapsed = (now - earliest) / 3600000;
   return Math.min(elapsed, MAX_HOURS);
 }
 
