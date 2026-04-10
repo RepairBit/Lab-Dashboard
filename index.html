@@ -181,27 +181,27 @@ function computeTechStats(rows) {
   const graveyards = rows.filter(r => r.Outcome === "Graveyard").length;
   const pct        = touches > 0 ? Math.round((repairs / touches) * 100) : 0;
   const hours      = computeHoursWorked(rows);
-  const bph        = (hours !== null && hours > 0) ? (touches / hours).toFixed(1) : null;
+  const bph        = (hours !== null && hours > 0) ? (repairs / hours).toFixed(1) : null;
   return { touches, repairs, giveups, graveyards, pct, bph };
 }
 
 // Compute aggregate BPH for a set of techs (each with their own rows)
-// Each tech contributes touches / their own hours; we sum touches and sum hours.
+// Repairs per hour: sum repairs across techs / sum hours worked across techs
 function computeAggregateBph(techMap) {
-  let totalTouches = 0;
+  let totalRepairs = 0;
   let totalHours = 0;
   let hasTime = false;
   for (const techData of Object.values(techMap)) {
     const rows = techData.rows;
     const hours = computeHoursWorked(rows);
     if (hours !== null && hours > 0) {
-      totalTouches += rows.length;
+      totalRepairs += rows.filter(r => r.Outcome === "Repaired").length;
       totalHours   += hours;
       hasTime = true;
     }
   }
   if (!hasTime || totalHours === 0) return null;
-  return (totalTouches / totalHours).toFixed(1);
+  return (totalRepairs / totalHours).toFixed(1);
 }
 
 function renderAll() {
