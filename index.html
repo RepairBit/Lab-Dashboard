@@ -106,7 +106,7 @@
 let allData=[], teams=[], currentTeam=0, rotateTimer=null, progTimer=null, progStart=null;
 
 // Parse a time value into today's Date object.
-// Handles ISO strings like "1899-12-30T12:49:00.000Z" (Google Sheets serial times)
+// Handles ISO strings like "1899-12-30T12:49:00.000Z" (Google Sheets serial times in UTC)
 // as well as plain strings like "8:30 AM" or "14:05"
 function parseTimeToDate(timeStr) {
   if (!timeStr) return null;
@@ -114,10 +114,13 @@ function parseTimeToDate(timeStr) {
     const s = String(timeStr).trim();
 
     // Google Sheets ISO format: "1899-12-30T12:49:00.000Z"
+    // Value is UTC — convert to local time using browser's timezone offset
     const iso = s.match(/T(\d{2}):(\d{2}):(\d{2})/);
     if (iso) {
+      // Build a real Date from the ISO string so JS handles the UTC offset correctly
+      const raw = new Date(s);
       const d = new Date();
-      d.setHours(parseInt(iso[1], 10), parseInt(iso[2], 10), parseInt(iso[3], 10), 0);
+      d.setHours(raw.getHours(), raw.getMinutes(), raw.getSeconds(), 0);
       return d;
     }
 
