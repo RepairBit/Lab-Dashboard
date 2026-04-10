@@ -60,33 +60,20 @@
   .config-banner { background: #2a1e00; border: 1px solid #f68b20; border-radius: 8px; padding: 12px 18px; font-size: 13px; color: #f68b20; margin-bottom: 20px; display: none; }
   code { background: #1a242b; border-radius: 4px; padding: 1px 6px; font-size: 12px; color: #f15d25; }
   .state-msg { text-align: center; padding: 60px 20px; color: #4a5a64; font-size: 15px; }
-  /* Summary overview panel */
-  .summary-panel-title { font-size: 16px; font-weight: 700; color: #f68b20; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
-  .teams-table-wrap { background: #222e37; border-radius: 10px; overflow: hidden; }
-  .teams-table { width: 100%; border-collapse: collapse; }
-  .teams-table th { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4a5a64; padding: 10px 16px; text-align: left; border-bottom: 2px solid #2a3640; }
-  .teams-table th:not(:first-child) { text-align: center; }
-  .teams-table td { padding: 13px 16px; border-bottom: 1px solid #1a242b; font-size: 15px; font-weight: 600; color: #c8d4da; }
-  .teams-table td:not(:first-child) { text-align: center; }
-  .teams-table tr:last-child td { border-bottom: none; }
-  .teams-table tbody tr:hover { background: rgba(255,255,255,0.03); }
-  .team-name-cell { font-size: 15px; font-weight: 700; color: #f68b20 !important; text-transform: uppercase; letter-spacing: 0.5px; }
-  .pct-cell.green { color: #22c55e; }
-  .pct-cell.yellow { color: #eab308; }
-  .pct-cell.red { color: #f15d25; }
 </style>
 </head>
 <body>
 <script>
   const APPS_SCRIPT_URL = "https://script.google.com/a/macros/repairbit.io/s/AKfycbwGVtzMeztx5KhqINxUw1PA7Tsw_ffInr5a0VFs4UlHr5JdhTEJutRDHbTro_uygfNNvA/exec";
   const REFRESH_MS     = 30000;
-  const TEAM_ROTATE_MS = 15000;
+  const TEAM_ROTATE_MS = 30000;
 </script>
 <div class="config-banner" id="configBanner">&#9888;&nbsp; Showing demo data. Replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> with your Apps Script URL.</div>
-<div class="header"><h1>Lab Dashboard</h1><div class="header-right">
-  <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-  <div class="last-updated" id="lastUpdated">Connecting...</div>
-</div></div>
+
+  <div class="header"><h1>Lab Dashboard</h1><div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <div class="last-updated" id="lastUpdated">Connecting...</div></div>
+</div>
 <div class="summary-grid">
   <div class="summary-card orange"><div class="label">Total Touches</div><div class="value" id="s-touches">—</div><div class="sub">All lab activity</div></div>
   <div class="summary-card"><div class="label">Unique Touches</div><div class="value" id="s-unique">—</div><div class="sub">Distinct serial numbers</div></div>
@@ -143,9 +130,6 @@ function renderAll() {
   document.getElementById("s-unique").textContent  = lab.unique.toLocaleString();
   document.getElementById("s-repairs").textContent = lab.repairs.toLocaleString();
   document.getElementById("s-pct").textContent     = lab.pct + "%";
-  const pctCard = document.getElementById("s-pct-card");
-  pctCard.classList.remove("green", "yellow", "red");
-  pctCard.classList.add(lab.pct >= 75 ? "green" : lab.pct > 50 ? "yellow" : "red");
 
   const teamMap = {};
   allData.forEach(row => {
@@ -165,43 +149,7 @@ function renderAll() {
   const stage = document.getElementById("teamStage");
   stage.innerHTML = "";
 
-  // --- Page 0: All Teams Summary ---
-  const summaryPanel = document.createElement("div");
-  summaryPanel.className = "team-panel" + (currentTeam === 0 ? " active" : "");
-  summaryPanel.id = "team-0";
-
-  const tableRows = teams.map(team => {
-    const techMap  = teamMap[team];
-    const teamRows = Object.values(techMap).flatMap(t => t.rows);
-    const repairs  = teamRows.filter(r => r.Outcome === "Repaired").length;
-    const giveups  = teamRows.filter(r => r.Outcome === "Give Up").length;
-    const grave    = teamRows.filter(r => r.Outcome === "Graveyard").length;
-    const pct      = teamRows.length > 0 ? Math.round((repairs / teamRows.length) * 100) : 0;
-    const pctCls   = pct >= 75 ? "green" : pct > 50 ? "yellow" : "red";
-    const techs    = Object.keys(techMap).length;
-    return '<tr>' +
-      '<td class="team-name-cell">' + esc(team) + '</td>' +
-      '<td>' + techs + '</td>' +
-      '<td>' + teamRows.length.toLocaleString() + '</td>' +
-      '<td>' + repairs.toLocaleString() + '</td>' +
-      '<td>' + giveups + '</td>' +
-      '<td>' + grave + '</td>' +
-      '<td class="pct-cell ' + pctCls + '">' + pct + '%</td>' +
-      '</tr>';
-  }).join("");
-
-  summaryPanel.innerHTML =
-    '<div class="summary-panel-title">All Teams Overview</div>' +
-    '<div class="teams-table-wrap">' +
-    '<table class="teams-table"><thead><tr>' +
-    '<th>Team</th><th>Techs</th><th>Touches</th><th>Repairs</th><th>Give-Ups</th><th>Graveyards</th><th>Repair %</th>' +
-    '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
-    '</div>';
-  stage.appendChild(summaryPanel);
-
-  // --- Pages 1+: Individual teams ---
   teams.forEach((team, idx) => {
-    const panelIdx = idx + 1;
     const techMap = teamMap[team];
     const techNames = Object.keys(techMap).sort((a, b) => {
       const sa = computeTechStats(techMap[a].rows);
@@ -234,8 +182,8 @@ function renderAll() {
     }).join("");
 
     const panel = document.createElement("div");
-    panel.className = "team-panel" + (panelIdx === currentTeam ? " active" : "");
-    panel.id = "team-" + panelIdx;
+    panel.className = "team-panel" + (idx === currentTeam ? " active" : "");
+    panel.id = "team-" + idx;
     panel.innerHTML =
       '<div class="team-header">' +
       '<div class="team-name">' + esc(team) + '</div>' +
@@ -251,21 +199,19 @@ function renderAll() {
     stage.appendChild(panel);
   });
 
-  const totalPages = teams.length + 1;
   const dotsEl = document.getElementById("teamDots");
-  dotsEl.innerHTML = Array.from({length: totalPages}, (_, i) =>
-    '<div class="team-dot' + (i === currentTeam ? " active" : "") + '" onclick="goToTeam(' + i + ')" title="' + (i === 0 ? "Overview" : esc(teams[i - 1])) + '"></div>'
+  dotsEl.innerHTML = teams.map((t, i) =>
+    '<div class="team-dot' + (i === currentTeam ? " active" : "") + '" onclick="goToTeam(' + i + ')" title="' + esc(t) + '"></div>'
   ).join("");
 
-  document.getElementById("teamNav").style.display = totalPages > 1 ? "flex" : "none";
+  document.getElementById("teamNav").style.display = teams.length > 1 ? "flex" : "none";
   startRotation();
 }
 
 function goToTeam(idx) {
-  const totalPages = teams.length + 1;
   document.querySelectorAll(".team-panel").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".team-dot").forEach(d => d.classList.remove("active"));
-  currentTeam = ((idx % totalPages) + totalPages) % totalPages;
+  currentTeam = ((idx % teams.length) + teams.length) % teams.length;
   const panel = document.getElementById("team-" + currentTeam);
   if (panel) panel.classList.add("active");
   const dots = document.querySelectorAll(".team-dot");
