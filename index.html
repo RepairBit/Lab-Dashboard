@@ -127,7 +127,7 @@
   <button class="nav-btn" onclick="navigate(1)">Next &#8594;</button>
 </div>
 <script>
-let allData=[], teams=[], currentTeam=0, rotateTimer=null, progTimer=null, progStart=null, browseMode=false, currentRange="today";
+let allRows=[], allData=[], teams=[], currentTeam=0, rotateTimer=null, progTimer=null, progStart=null, browseMode=false, currentRange="today";
 
 function setRange(range) {
   if (range === currentRange) return;
@@ -135,9 +135,8 @@ function setRange(range) {
   document.querySelectorAll(".filter-btn").forEach(b => {
     b.classList.toggle("active", b.dataset.range === range);
   });
-  document.getElementById("filterLoading").style.display = "inline";
   currentTeam = 0;
-  fetchData();
+  applyRangeAndRender();
 }
 
 function toggleMode() {
@@ -164,16 +163,65 @@ async function fetchData() {
     useDemoData(); return;
   }
   try {
-    const res = await fetch(APPS_SCRIPT_URL + "?range=" + currentRange + "&t=" + Date.now());
+    const res = await fetch(APPS_SCRIPT_URL + "?range=all&t=" + Date.now());
     const json = await res.json();
-    allData = json.rows || [];
-    renderAll();
-    document.getElementById("filterLoading").style.display = "none";
+    allRows = json.rows || [];
+    applyRangeAndRender();
     document.getElementById("lastUpdated").textContent = "Updated " + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   } catch(e) {
-    document.getElementById("filterLoading").style.display = "none";
     document.getElementById("lastUpdated").textContent = "Connection error — retrying...";
   }
+}
+
+function applyRangeAndRender() {
+  allData = filterByRange(allRows, currentRange);
+  renderAll();
+}
+
+function getCutoff(range) {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  switch (range) {
+    case "all": return null;
+    case "week": {
+      const d = new Date(startOfToday);
+      const dow = d.getDay();
+      const daysSinceMon = (dow + 6) % 7;
+      d.setDate(d.getDate() - daysSinceMon);
+      return d;
+    }
+    case "month": {
+      const d = new Date(startOfToday);
+      d.setDate(1);
+      return d;
+    }
+    case "quarter": {
+      const d = new Date(startOfToday);
+      const qStartMonth = Math.floor(d.getMonth() / 3) * 3;
+      d.setMonth(qStartMonth, 1);
+      return d;
+    }
+    case "ytd": {
+      const d = new Date(startOfToday);
+      d.setMonth(0, 1);
+      return d;
+    }
+    case "today":
+    default:
+      return startOfToday;
+  }
+}
+
+function filterByRange(rows, range) {
+  const cutoff = getCutoff(range);
+  if (cutoff === null) return rows;
+  const cutoffMs = cutoff.getTime();
+  return rows.filter(r => {
+    if (!r.Date) return false;
+    const t = new Date(r.Date).getTime();
+    if (isNaN(t)) return false;
+    return t >= cutoffMs;
+  });
 }
 
 function computeLabSummary(rows) {
@@ -229,7 +277,6 @@ function renderAll() {
   });
 
   teams = Object.keys(teamMap).sort((a, b) => {
-    // Pin "Terminated" to the very end
     const aTerm = a.toLowerCase() === "terminated";
     const bTerm = b.toLowerCase() === "terminated";
     if (aTerm && !bTerm) return 1;
@@ -242,7 +289,6 @@ function renderAll() {
   const stage = document.getElementById("teamStage");
   stage.innerHTML = "";
 
-  // --- Page 0: All Teams Summary ---
   const summaryPanel = document.createElement("div");
   summaryPanel.className = "team-panel" + (currentTeam === 0 ? " active" : "");
   summaryPanel.id = "team-0";
@@ -280,7 +326,6 @@ function renderAll() {
     '</div>';
   stage.appendChild(summaryPanel);
 
-  // --- Pages 1+: Individual teams ---
   teams.forEach((team, idx) => {
     const panelIdx = idx + 1;
     const techMap = teamMap[team];
@@ -398,6 +443,7 @@ function useDemoData() {
     ["Finley Q","Kendall W","Cam E","Remy R","Shay T","Arlo S"]
   ];
   const rows = [];
+  const today = new Date();
   tNames.forEach((team, ti) => {
     names[ti].forEach((name, ni) => {
       const level = levels[ni % levels.length];
@@ -411,17 +457,11 @@ function useDemoData() {
         rows.push({ Name: name, Level: level, Team: team,
           "Serial Number": "SN" + (1000 + ti*200 + ni*30 + i),
           Outcome: outcome,
-          "Error Type": errorType });
+          "Error Type": errorType,
+          Date: today.toISOString() });
       }
     });
   });
-  allData = rows;
-  renderAll();
-  document.getElementById("lastUpdated").textContent = "Demo data — not connected to sheet";
-}
-
-fetchData();
-setInterval(fetchData, REFRESH_MS);
-</script>
-</body>
-</html>
+  allRows = rows;
+  applyRangeAndRender();
+  docu
