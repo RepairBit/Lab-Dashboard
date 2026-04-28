@@ -269,7 +269,8 @@ function renderAll() {
 
   const teamMap = {};
   allData.forEach(row => {
-    const t = row.Team || ""; if (!t) return;
+    let t = row.Team || ""; if (!t) return;
+    if (t.toLowerCase().trim() === "qa lab") t = "Training";
     const n = row.Name || "Unknown";
     if (!teamMap[t]) teamMap[t] = {};
     if (!teamMap[t][n]) teamMap[t][n] = { rows: [], level: row.Level || "" };
