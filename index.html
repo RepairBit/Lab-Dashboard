@@ -464,4 +464,11 @@ function useDemoData() {
   });
   allRows = rows;
   applyRangeAndRender();
-  docu
+  document.getElementById("lastUpdated").textContent = "Demo data — not connected to sheet";
+}
+
+fetchData();
+setInterval(fetchData, REFRESH_MS);
+</script>
+</body>
+</html>
