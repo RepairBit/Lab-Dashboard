@@ -588,35 +588,9 @@
     color: var(--muted-2);
     font-size: 14px;
   }
-  code {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 12px;
-    color: var(--red);
-    font-family: 'SF Mono', Menlo, monospace;
-  }
-  .config-banner {
-    background: rgba(224,122,26,0.08);
-    border: 1px solid rgba(224,122,26,0.3);
-    color: var(--brand);
-    padding: 10px 16px;
-    border-radius: 8px;
-    margin-bottom: 24px;
-    font-size: 13px;
-  }
 </style>
 </head>
 <body>
-<script>
-  const APPS_SCRIPT_URL = "https://lab-dashboard-api.kmead.workers.dev";
-  const REFRESH_MS     = 30000;
-  const TEAM_ROTATE_MS = 15000;
-  const HOURS_PER_DAY  = 6.5;
-</script>
-
-<div class="config-banner" id="configBanner" style="display:none;">&#9888; Showing demo data. Replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> with your Apps Script URL.</div>
 
 <div class="header">
   <div class="brand">
@@ -647,49 +621,31 @@
 
 <div class="kpi-strip">
   <div class="kpi-card">
-    <div class="kpi-head">
-      <span class="kpi-label">Total Repairs</span>
-    </div>
+    <div class="kpi-head"><span class="kpi-label">Total Repairs</span></div>
     <div class="kpi-value" id="s-repairs">—</div>
-    <div class="kpi-progress-track">
-      <div class="kpi-progress-fill" id="s-pct-bar" style="width: 0%;"></div>
-    </div>
+    <div class="kpi-progress-track"><div class="kpi-progress-fill" id="s-pct-bar" style="width: 0%;"></div></div>
     <div class="kpi-sub" id="s-pct-sub">—</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-head">
-      <span class="kpi-label">Boards per Hour</span>
-    </div>
+    <div class="kpi-head"><span class="kpi-label">Boards per Hour</span></div>
     <div class="kpi-value" id="s-bph">—</div>
-    <div class="kpi-progress-track">
-      <div class="kpi-progress-fill" id="s-bph-bar" style="width: 0%;"></div>
-    </div>
+    <div class="kpi-progress-track"><div class="kpi-progress-fill" id="s-bph-bar" style="width: 0%;"></div></div>
     <div class="kpi-sub" id="s-bph-sub">—</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-head">
-      <span class="kpi-label">Total Touches</span>
-    </div>
+    <div class="kpi-head"><span class="kpi-label">Total Touches</span></div>
     <div class="kpi-value" id="s-touches">—</div>
-    <div class="kpi-progress-track">
-      <div class="kpi-progress-fill" style="width: 100%; background: rgba(255,255,255,0.2);"></div>
-    </div>
+    <div class="kpi-progress-track"><div class="kpi-progress-fill" style="width: 100%; background: rgba(255,255,255,0.2);"></div></div>
     <div class="kpi-sub" id="s-touches-sub">All lab activity</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-head">
-      <span class="kpi-label">Unique Touches</span>
-    </div>
+    <div class="kpi-head"><span class="kpi-label">Unique Touches</span></div>
     <div class="kpi-value" id="s-unique">—</div>
-    <div class="kpi-progress-track">
-      <div class="kpi-progress-fill" id="s-unique-bar" style="width: 0%; background: rgba(255,255,255,0.35);"></div>
-    </div>
+    <div class="kpi-progress-track"><div class="kpi-progress-fill" id="s-unique-bar" style="width: 0%; background: rgba(255,255,255,0.35);"></div></div>
     <div class="kpi-sub" id="s-unique-sub">—</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-head">
-      <span class="kpi-label">Outcomes</span>
-    </div>
+    <div class="kpi-head"><span class="kpi-label">Outcomes</span></div>
     <div class="outcomes-row">
       <div class="outcome-col">
         <span class="outcome-num false-asic" id="s-false">—</span>
@@ -719,18 +675,14 @@
         <span class="chart-legend-item"><span class="chart-legend-line"></span>BPH</span>
       </div>
     </div>
-    <div class="chart-canvas-wrap">
-      <canvas id="trendChart" role="img" aria-label="Daily trend of repair percentage and BPH"></canvas>
-    </div>
+    <div class="chart-canvas-wrap"><canvas id="trendChart"></canvas></div>
   </div>
   <div class="chart-card">
     <div class="chart-head">
       <div class="chart-title">Overall Team Repair %</div>
       <span class="chart-meta">Sorted by Repair %</span>
     </div>
-    <div class="chart-canvas-wrap">
-      <canvas id="teamsChart" role="img" aria-label="Horizontal bar chart of repair percentage by team"></canvas>
-    </div>
+    <div class="chart-canvas-wrap"><canvas id="teamsChart"></canvas></div>
   </div>
 </div>
 
@@ -739,9 +691,7 @@
     <div class="chart-title">Tech Distributions — BPH × Repair %</div>
     <span class="chart-meta">Each dot = one tech</span>
   </div>
-  <div class="chart-canvas-wrap scatter">
-    <canvas id="scatterChart" role="img" aria-label="Scatter plot of each technician's BPH versus repair percentage"></canvas>
-  </div>
+  <div class="chart-canvas-wrap scatter"><canvas id="scatterChart"></canvas></div>
 </div>
 
 <div class="section-divider">
@@ -760,765 +710,395 @@
 </div>
 
 <script>
-let allRows = [], allData = [], teams = [], currentTeam = 0;
-let rotateTimer = null, progTimer = null, progStart = null;
-let browseMode = false, currentRange = "today";
-let trendChart = null, teamsChart = null, scatterChart = null;
+  const WORKER_URL     = "https://lab-dashboard-api.kmead.workers.dev";
+  const REFRESH_MS     = 30000;
+  const TEAM_ROTATE_MS = 15000;
 
-const COLORS = {
-  text: '#FAFAFB',
-  text2: '#ECECEE',
-  muted: '#9A9AA1',
-  muted2: '#6E6E76',
-  grid: 'rgba(255,255,255,0.04)',
-  gridStrong: 'rgba(255,255,255,0.08)',
-  green: '#4ADE80',
-  orange: '#FBBF24',
-  red: '#F87171',
-  purple: '#C084FC',
-  ink: '#FAFAFB'
-};
+  let currentData = null;
+  let teams = [], currentTeam = 0;
+  let rotateTimer = null, progTimer = null, progStart = null;
+  let browseMode = false, currentRange = "today";
+  let trendChart = null, teamsChart = null, scatterChart = null;
 
-function tickClock() {
-  const c = document.getElementById('clock');
-  if (c) c.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
-}
-setInterval(tickClock, 1000);
-tickClock();
+  const COLORS = {
+    text: '#FAFAFB', text2: '#ECECEE', muted: '#9A9AA1', muted2: '#6E6E76',
+    grid: 'rgba(255,255,255,0.04)', gridStrong: 'rgba(255,255,255,0.08)',
+    green: '#4ADE80', orange: '#FBBF24', red: '#F87171', purple: '#C084FC',
+    ink: '#FAFAFB'
+  };
 
-function setRange(range) {
-  if (range === currentRange) return;
-  currentRange = range;
-  document.querySelectorAll(".filter-btn").forEach(b => {
-    b.classList.toggle("active", b.dataset.range === range);
-  });
-  currentTeam = 0;
-  document.getElementById("lastUpdated").textContent = "Loading " + range + "...";
-  fetchData();
-}
-
-function toggleMode() {
-  browseMode = !browseMode;
-  const btn = document.getElementById("modeToggle");
-  if (browseMode) {
-    btn.textContent = "Browse";
-    btn.classList.add("browse-mode");
-    if (rotateTimer) { clearInterval(rotateTimer); rotateTimer = null; }
-    if (progTimer) { cancelAnimationFrame(progTimer); progTimer = null; }
-    const pb = document.getElementById("progressBar");
-    if (pb) pb.style.width = "0%";
-    document.getElementById("rotationLabel").textContent = "Paused";
-  } else {
-    btn.textContent = "Presentation";
-    btn.classList.remove("browse-mode");
-    document.getElementById("rotationLabel").textContent = "Auto-rotating";
-    startRotation();
+  function tickClock() {
+    const c = document.getElementById('clock');
+    if (c) c.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
   }
-}
+  setInterval(tickClock, 1000);
+  tickClock();
 
-async function fetchData() {
-  if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
-    document.getElementById("configBanner").style.display = "block";
-    useDemoData(); return;
+  function setRange(range) {
+    if (range === currentRange) return;
+    currentRange = range;
+    document.querySelectorAll(".filter-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.range === range);
+    });
+    currentTeam = 0;
+    document.getElementById("lastUpdated").textContent = "Loading " + range + "...";
+    fetchData();
   }
-  try {
-    const res = await fetch(APPS_SCRIPT_URL + "?range=" + encodeURIComponent(currentRange) + "&t=" + Date.now());
-    const json = await res.json();
-    allRows = json.rows || [];
-    // Server already filtered to currentRange, so allRows IS allData
-    allData = allRows;
-    renderAll();
-    document.getElementById("lastUpdated").textContent =
-      "Updated " + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  } catch (e) {
-    document.getElementById("lastUpdated").textContent = "Connection error — retrying";
-  }
-}
 
-function applyRangeAndRender() {
-  // Kept for backward compatibility (demo data path)
-  allData = filterByRange(allRows, currentRange);
-  renderAll();
-}
-
-function getCutoff(range) {
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  switch (range) {
-    case "all": return null;
-    case "week": {
-      const d = new Date(startOfToday);
-      const dow = d.getDay();
-      d.setDate(d.getDate() - ((dow + 6) % 7));
-      return d;
+  function toggleMode() {
+    browseMode = !browseMode;
+    const btn = document.getElementById("modeToggle");
+    if (browseMode) {
+      btn.textContent = "Browse";
+      btn.classList.add("browse-mode");
+      if (rotateTimer) { clearInterval(rotateTimer); rotateTimer = null; }
+      if (progTimer) { cancelAnimationFrame(progTimer); progTimer = null; }
+      const pb = document.getElementById("progressBar");
+      if (pb) pb.style.width = "0%";
+      document.getElementById("rotationLabel").textContent = "Paused";
+    } else {
+      btn.textContent = "Presentation";
+      btn.classList.remove("browse-mode");
+      document.getElementById("rotationLabel").textContent = "Auto-rotating";
+      startRotation();
     }
-    case "month": { const d = new Date(startOfToday); d.setDate(1); return d; }
-    case "quarter": {
-      const d = new Date(startOfToday);
-      d.setMonth(Math.floor(d.getMonth() / 3) * 3, 1);
-      return d;
-    }
-    case "ytd": { const d = new Date(startOfToday); d.setMonth(0, 1); return d; }
-    case "today":
-    default: return startOfToday;
   }
-}
 
-function filterByRange(rows, range) {
-  const cutoff = getCutoff(range);
-  if (cutoff === null) return rows;
-  const cutoffMs = cutoff.getTime();
-  return rows.filter(r => {
-    if (!r.Date) return false;
-    const t = new Date(r.Date).getTime();
-    if (isNaN(t)) return false;
-    return t >= cutoffMs;
-  });
-}
+  async function fetchData() {
+    try {
+      const res = await fetch(WORKER_URL + "?range=" + encodeURIComponent(currentRange) + "&t=" + Date.now());
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      currentData = json;
+      renderAll();
+      document.getElementById("lastUpdated").textContent =
+        "Updated " + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    } catch (e) {
+      document.getElementById("lastUpdated").textContent = "Connection error — retrying";
+    }
+  }
 
-function dayKey(r) {
-  if (!r.Date) return null;
-  const d = new Date(r.Date);
-  if (isNaN(d.getTime())) return null;
-  return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
-}
+  function pctClass(pct) {
+    if (pct >= 75) return "green";
+    if (pct > 50)  return "orange";
+    return "red";
+  }
+  function bphClass(bph) {
+    if (bph >= 1.0) return "green";
+    if (bph >= 0.5) return "orange";
+    return "red";
+  }
+  function classToColor(cls) { return COLORS[cls] || COLORS.text; }
+  function fmtBPH(v) { return Number(v).toFixed(2); }
 
-function uniqueTechDays(rows, scope) {
-  const set = new Set();
-  rows.forEach(r => {
-    const dk = dayKey(r);
-    if (!dk) return;
-    if (scope === "tech") set.add(dk);
-    else set.add((r.Name || "Unknown") + "|" + dk);
-  });
-  return set.size;
-}
-
-function computeBPH(repairs, techDays) {
-  const hours = techDays * HOURS_PER_DAY;
-  if (hours <= 0) return 0;
-  return repairs / hours;
-}
-
-function fmtBPH(v) { return v.toFixed(2); }
-
-function isFalseAsic(r) {
-  const et = (r["Error Type"] || "").toString().toLowerCase().trim();
-  return r.Outcome === "Repaired" && et === "false asic";
-}
-
-function pctClass(pct) {
-  if (pct >= 75) return "green";
-  if (pct > 50)  return "orange";
-  return "red";
-}
-function bphClass(bph) {
-  if (bph >= 1.0) return "green";
-  if (bph >= 0.5) return "orange";
-  return "red";
-}
-function classToColor(cls) {
-  return COLORS[cls] || COLORS.text;
-}
-
-function computeLabSummary(rows) {
-  const touches = rows.length;
-  const unique  = new Set(rows.map(r => r["Serial Number"]).filter(Boolean)).size;
-  const allRep  = rows.filter(r => r.Outcome === "Repaired").length;
-  const falseA  = rows.filter(isFalseAsic).length;
-  const repairs = allRep - falseA;
-  const giveups = rows.filter(r => r.Outcome === "Give Up").length;
-  const grave   = rows.filter(r => r.Outcome === "Graveyard").length;
-  const repairable = touches - falseA;
-  const pct     = repairable > 0 ? Math.round((repairs / repairable) * 100) : 0;
-  const techDays = uniqueTechDays(rows, "lab");
-  const bph     = computeBPH(repairs, techDays);
-  return { touches, unique, repairs, falseAsics: falseA, giveups, graveyards: grave, pct, bph, techDays, repairable };
-}
-
-function computeTechStats(rows) {
-  const touches    = rows.length;
-  const allRepairs = rows.filter(r => r.Outcome === "Repaired").length;
-  const falseAsics = rows.filter(isFalseAsic).length;
-  const repairs    = allRepairs - falseAsics;
-  const giveups    = rows.filter(r => r.Outcome === "Give Up").length;
-  const graveyards = rows.filter(r => r.Outcome === "Graveyard").length;
-  const repairable = touches - falseAsics;
-  const pct        = repairable > 0 ? Math.round((repairs / repairable) * 100) : 0;
-  const techDays   = uniqueTechDays(rows, "tech");
-  const bph        = computeBPH(repairs, techDays);
-  return { touches, repairs, falseAsics, giveups, graveyards, pct, bph, techDays };
-}
-
-function buildTrendData(rows) {
-  const byDay = {};
-  rows.forEach(r => {
-    const dk = dayKey(r);
-    if (!dk) return;
-    if (!byDay[dk]) byDay[dk] = [];
-    byDay[dk].push(r);
-  });
-  const sortedKeys = Object.keys(byDay).sort((a, b) => {
-    const da = new Date(a.split("-").map(Number));
-    const db = new Date(b.split("-").map(Number));
-    return da - db;
-  });
-  const last = sortedKeys.slice(-14);
-  const labels = [], pcts = [], bphs = [];
-  last.forEach(k => {
-    const dayRows = byDay[k];
-    const allRep = dayRows.filter(r => r.Outcome === "Repaired").length;
-    const falseA = dayRows.filter(isFalseAsic).length;
-    const repairs = allRep - falseA;
-    const repairable = dayRows.length - falseA;
-    const pct = repairable > 0 ? Math.round((repairs / repairable) * 100) : 0;
-    const techDaysOnThatDay = new Set(dayRows.map(r => r.Name || "Unknown")).size;
-    const bph = computeBPH(repairs, techDaysOnThatDay);
-    const [y, m, d] = k.split("-").map(Number);
-    const dt = new Date(y, m-1, d);
-    labels.push(dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-    pcts.push(pct);
-    bphs.push(parseFloat(bph.toFixed(2)));
-  });
-  return { labels, pcts, bphs };
-}
-
-function renderTrendChart(rows) {
-  const { labels, pcts, bphs } = buildTrendData(rows);
-  const ctx = document.getElementById('trendChart');
-  if (trendChart) trendChart.destroy();
-  trendChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Repair %',
-          data: pcts,
-          borderColor: COLORS.green,
-          backgroundColor: 'rgba(74,222,128,0.12)',
-          borderWidth: 2,
-          tension: 0.35,
-          yAxisID: 'y',
-          fill: true,
-          pointRadius: 3,
-          pointBackgroundColor: COLORS.green,
-          pointBorderColor: '#0A0A0B',
-          pointBorderWidth: 1
-        },
-        {
-          label: 'BPH',
-          data: bphs,
-          borderColor: COLORS.text,
-          borderWidth: 1.5,
-          borderDash: [4, 3],
-          tension: 0.35,
-          yAxisID: 'y1',
-          pointRadius: 3,
-          pointBackgroundColor: COLORS.text,
-          pointBorderColor: '#0A0A0B',
-          pointBorderWidth: 1
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          mode: 'index', intersect: false,
-          backgroundColor: '#1A1A1D', borderColor: '#27272B', borderWidth: 1,
-          titleColor: COLORS.text, bodyColor: COLORS.text2, padding: 10
-        }
+  function renderTrendChart(trend) {
+    const ctx = document.getElementById('trendChart');
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: trend.labels,
+        datasets: [
+          {
+            label: 'Repair %', data: trend.pcts,
+            borderColor: COLORS.green, backgroundColor: 'rgba(74,222,128,0.12)',
+            borderWidth: 2, tension: 0.35, yAxisID: 'y', fill: true,
+            pointRadius: 3, pointBackgroundColor: COLORS.green,
+            pointBorderColor: '#0A0A0B', pointBorderWidth: 1
+          },
+          {
+            label: 'BPH', data: trend.bphs,
+            borderColor: COLORS.text, borderWidth: 1.5, borderDash: [4,3], tension: 0.35,
+            yAxisID: 'y1', pointRadius: 3, pointBackgroundColor: COLORS.text,
+            pointBorderColor: '#0A0A0B', pointBorderWidth: 1
+          }
+        ]
       },
-      scales: {
-        x: {
-          ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.muted2, maxRotation: 0 },
-          grid: { color: COLORS.grid, drawBorder: false }
-        },
-        y: {
-          position: 'left', min: 0, max: 100,
-          ticks: { callback: v => v + '%', font: { family: 'Inter', size: 11 }, color: COLORS.green },
-          grid: { color: COLORS.grid, drawBorder: false }
-        },
-        y1: {
-          position: 'right', min: 0,
-          ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.text2 },
-          grid: { display: false }
-        }
-      }
-    }
-  });
-}
-
-function renderTeamsChart(teamSummaries) {
-  const sorted = [...teamSummaries].sort((a, b) => b.pct - a.pct);
-  const labels = sorted.map(t => t.name);
-  const data = sorted.map(t => t.pct);
-  const colors = sorted.map(t => classToColor(pctClass(t.pct)));
-  const ctx = document.getElementById('teamsChart');
-  if (teamsChart) teamsChart.destroy();
-  teamsChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Repair %',
-        data,
-        backgroundColor: colors,
-        borderColor: 'transparent',
-        borderWidth: 0,
-        borderRadius: 4
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1A1A1D', borderColor: '#27272B', borderWidth: 1,
-          titleColor: COLORS.text, bodyColor: COLORS.text2, padding: 10,
-          callbacks: { label: c => c.parsed.x + '%' }
-        }
-      },
-      scales: {
-        x: {
-          min: 0, max: 100,
-          ticks: { callback: v => v + '%', font: { family: 'Inter', size: 11 }, color: COLORS.muted2 },
-          grid: { color: COLORS.grid, drawBorder: false }
-        },
-        y: {
-          ticks: { font: { family: 'Inter', size: 12 }, color: COLORS.text2 },
-          grid: { display: false }
-        }
-      }
-    }
-  });
-}
-
-function renderScatterChart(techPoints) {
-  const groups = { L1: [], L2: [], L3: [], SrLead: [], Other: [] };
-  techPoints.forEach(p => {
-    const lvl = (p.level || "").toUpperCase();
-    if (lvl.includes("LEAD") || lvl.includes("SR") || lvl.includes("SENIOR")) groups.SrLead.push(p);
-    else if (lvl.includes("L3")) groups.L3.push(p);
-    else if (lvl.includes("L2")) groups.L2.push(p);
-    else if (lvl.includes("L1")) groups.L1.push(p);
-    else groups.Other.push(p);
-  });
-  const datasets = [];
-  if (groups.SrLead.length) datasets.push({
-    label: 'Sr / Lead',
-    data: groups.SrLead,
-    pointStyle: 'circle',
-    backgroundColor: 'transparent',
-    borderColor: COLORS.green,
-    borderWidth: 2.5,
-    pointRadius: 7,
-    hoverRadius: 9
-  });
-  if (groups.L3.length) datasets.push({
-    label: 'L3',
-    data: groups.L3,
-    pointStyle: 'star',
-    backgroundColor: COLORS.purple,
-    borderColor: COLORS.purple,
-    borderWidth: 1,
-    pointRadius: 7,
-    hoverRadius: 9
-  });
-  if (groups.L2.length) datasets.push({
-    label: 'L2',
-    data: groups.L2,
-    pointStyle: 'triangle',
-    backgroundColor: COLORS.orange,
-    borderColor: COLORS.orange,
-    borderWidth: 1,
-    pointRadius: 7,
-    hoverRadius: 9
-  });
-  if (groups.L1.length) datasets.push({
-    label: 'L1',
-    data: groups.L1,
-    pointStyle: 'rect',
-    backgroundColor: COLORS.red,
-    borderColor: COLORS.red,
-    borderWidth: 1,
-    pointRadius: 6,
-    hoverRadius: 8
-  });
-  if (groups.Other.length) datasets.push({
-    label: 'Other',
-    data: groups.Other,
-    pointStyle: 'crossRot',
-    backgroundColor: COLORS.text,
-    borderColor: COLORS.text,
-    borderWidth: 2,
-    pointRadius: 7,
-    hoverRadius: 9
-  });
-
-  const maxBph = Math.max(1, ...techPoints.map(p => p.x)) * 1.1;
-  const ctx = document.getElementById('scatterChart');
-  if (scatterChart) scatterChart.destroy();
-  scatterChart = new Chart(ctx, {
-    type: 'scatter',
-    data: { datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true, position: 'bottom',
-          labels: {
-            font: { family: 'Inter', size: 11 }, color: COLORS.text2,
-            boxWidth: 10, boxHeight: 10, usePointStyle: true, padding: 16
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index', intersect: false,
+            backgroundColor: '#1A1A1D', borderColor: '#27272B', borderWidth: 1,
+            titleColor: COLORS.text, bodyColor: COLORS.text2, padding: 10
           }
         },
-        tooltip: {
-          backgroundColor: '#1A1A1D', borderColor: '#27272B', borderWidth: 1,
-          titleColor: COLORS.text, bodyColor: COLORS.text2, padding: 10,
-          callbacks: { label: c => c.raw.name + ': ' + c.parsed.x.toFixed(2) + ' BPH, ' + c.parsed.y + '%' }
-        }
-      },
-      scales: {
-        x: {
-          min: 0, max: maxBph,
-          title: { display: true, text: 'BPH →', font: { family: 'Inter', size: 11 }, color: COLORS.muted },
-          ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.muted2 },
-          grid: { color: COLORS.grid, drawBorder: false }
-        },
-        y: {
-          min: 0, max: 100,
-          title: { display: true, text: 'Repair % →', font: { family: 'Inter', size: 11 }, color: COLORS.muted },
-          ticks: { callback: v => v + '%', font: { family: 'Inter', size: 11 }, color: COLORS.muted2 },
-          grid: { color: COLORS.grid, drawBorder: false }
+        scales: {
+          x: { ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.muted2, maxRotation: 0 }, grid: { color: COLORS.grid, drawBorder: false } },
+          y: { position: 'left', min: 0, max: 100, ticks: { callback: v => v + '%', font: { family: 'Inter', size: 11 }, color: COLORS.green }, grid: { color: COLORS.grid, drawBorder: false } },
+          y1: { position: 'right', min: 0, ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.text2 }, grid: { display: false } }
         }
       }
-    }
-  });
-}
-
-function renderAll() {
-  const lab = computeLabSummary(allData);
-
-  // Total Repairs (with Repair % under)
-  const repairsEl = document.getElementById("s-repairs");
-  repairsEl.textContent = lab.repairs.toLocaleString();
-  repairsEl.className = "kpi-value " + pctClass(lab.pct);
-  const pctBar = document.getElementById("s-pct-bar");
-  pctBar.style.width = Math.min(100, lab.pct) + "%";
-  pctBar.className = "kpi-progress-fill " + pctClass(lab.pct);
-  document.getElementById("s-pct-sub").innerHTML =
-    '<span style="color: var(--' + pctClass(lab.pct) + '); font-weight: 600;">' + lab.pct + '%</span>' +
-    ' · ' + lab.repairable.toLocaleString() + ' repairable';
-
-  // Boards per Hour
-  const bphEl = document.getElementById("s-bph");
-  bphEl.textContent = fmtBPH(lab.bph);
-  bphEl.className = "kpi-value " + bphClass(lab.bph);
-  const bphBar = document.getElementById("s-bph-bar");
-  bphBar.style.width = Math.min(100, (lab.bph / 5) * 100) + "%";
-  bphBar.className = "kpi-progress-fill " + bphClass(lab.bph);
-  document.getElementById("s-bph-sub").textContent =
-    "Across " + lab.techDays + " tech-day" + (lab.techDays === 1 ? "" : "s");
-
-  // Total Touches
-  document.getElementById("s-touches").textContent = lab.touches.toLocaleString();
-
-  // Unique Touches
-  document.getElementById("s-unique").textContent = lab.unique.toLocaleString();
-  const uniquePct = lab.touches > 0 ? Math.round((lab.unique / lab.touches) * 100) : 0;
-  const uniqueBar = document.getElementById("s-unique-bar");
-  if (uniqueBar) uniqueBar.style.width = uniquePct + "%";
-  document.getElementById("s-unique-sub").textContent =
-    uniquePct + "% of total touches";
-
-  // Outcomes
-  document.getElementById("s-false").textContent = lab.falseAsics.toLocaleString();
-  document.getElementById("s-giveups").textContent = lab.giveups.toLocaleString();
-  document.getElementById("s-grave").textContent = lab.graveyards.toLocaleString();
-
-  // Outcomes proportional bar
-  const outcomeTotal = lab.falseAsics + lab.giveups + lab.graveyards;
-  const outBar = document.getElementById("s-outcome-bar");
-  if (outcomeTotal > 0) {
-    const fpct = (lab.falseAsics / outcomeTotal) * 100;
-    const gpct = (lab.giveups / outcomeTotal) * 100;
-    const grpct = (lab.graveyards / outcomeTotal) * 100;
-    outBar.innerHTML =
-      '<div class="outcome-bar-false" style="width:' + fpct + '%;"></div>' +
-      '<div class="outcome-bar-giveup" style="width:' + gpct + '%;"></div>' +
-      '<div class="outcome-bar-grave" style="width:' + grpct + '%;"></div>';
-  } else {
-    outBar.innerHTML = '';
+    });
   }
 
-  // Group by team
-  const teamMap = {};
-  allData.forEach(row => {
-    let t = row.Team || ""; if (!t) return;
-    if (t.toLowerCase().trim() === "qa lab") t = "Training";
-    const n = row.Name || "Unknown";
-    if (!teamMap[t]) teamMap[t] = {};
-    if (!teamMap[t][n]) teamMap[t][n] = { rows: [], level: row.Level || "" };
-    teamMap[t][n].rows.push(row);
-  });
-
-  teams = Object.keys(teamMap).sort((a, b) => {
-    const aTerm = a.toLowerCase() === "terminated";
-    const bTerm = b.toLowerCase() === "terminated";
-    if (aTerm && !bTerm) return 1;
-    if (!aTerm && bTerm) return -1;
-    const na = parseInt(a.replace(/\D/g,"")), nb = parseInt(b.replace(/\D/g,""));
-    if (!isNaN(na) && !isNaN(nb)) return na - nb;
-    return a.localeCompare(b);
-  });
-
-  // Team summaries (for chart)
-  const teamSummaries = teams.map(team => {
-    const techMap  = teamMap[team];
-    const teamRows = Object.values(techMap).flatMap(t => t.rows);
-    const allRep   = teamRows.filter(r => r.Outcome === "Repaired").length;
-    const falseA   = teamRows.filter(isFalseAsic).length;
-    const repairs  = allRep - falseA;
-    const repairable = teamRows.length - falseA;
-    const pct      = repairable > 0 ? Math.round((repairs / repairable) * 100) : 0;
-    const techDays = uniqueTechDays(teamRows, "team");
-    const bph      = computeBPH(repairs, techDays);
-    return { name: team, pct, bph, techCount: Object.keys(techMap).length };
-  });
-
-  // Tech scatter points
-  const techPoints = [];
-  teams.forEach(team => {
-    const techMap = teamMap[team];
-    Object.keys(techMap).forEach(name => {
-      const s = computeTechStats(techMap[name].rows);
-      if (s.touches < 1) return;
-      techPoints.push({
-        x: parseFloat(s.bph.toFixed(2)),
-        y: s.pct,
-        name,
-        level: techMap[name].level || "",
-        team
-      });
-    });
-  });
-
-  renderTrendChart(allData);
-  renderTeamsChart(teamSummaries);
-  renderScatterChart(techPoints);
-
-  // Team strip
-  const stripEl = document.getElementById("teamStrip");
-  let stripHTML = '<button class="team-pill' + (currentTeam === 0 ? " active" : "") +
-                  '" onclick="goToTeam(0)">Overview</button>';
-  teams.forEach((t, i) => {
-    const idx = i + 1;
-    stripHTML += '<button class="team-pill' + (idx === currentTeam ? " active" : "") +
-                 '" onclick="goToTeam(' + idx + ')">' + esc(t) + '</button>';
-  });
-  stripEl.innerHTML = stripHTML;
-
-  // Build panels
-  const stage = document.getElementById("teamStage");
-  stage.innerHTML = "";
-
-  // Overview panel
-  const overviewPanel = document.createElement("div");
-  overviewPanel.className = "team-panel" + (currentTeam === 0 ? " active" : "");
-  overviewPanel.id = "team-0";
-
-  const tableRows = teams.map(team => {
-    const techMap  = teamMap[team];
-    const teamRows = Object.values(techMap).flatMap(t => t.rows);
-    const allRep   = teamRows.filter(r => r.Outcome === "Repaired").length;
-    const falseA   = teamRows.filter(isFalseAsic).length;
-    const repairs  = allRep - falseA;
-    const giveups  = teamRows.filter(r => r.Outcome === "Give Up").length;
-    const grave    = teamRows.filter(r => r.Outcome === "Graveyard").length;
-    const repairable = teamRows.length - falseA;
-    const pct      = repairable > 0 ? Math.round((repairs / repairable) * 100) : 0;
-    const techDays = uniqueTechDays(teamRows, "team");
-    const teamBph  = computeBPH(repairs, techDays);
-    return '<tr>' +
-      '<td class="team-name-cell">' + esc(team) + '</td>' +
-      '<td>' + Object.keys(techMap).length + '</td>' +
-      '<td>' + teamRows.length.toLocaleString() + '</td>' +
-      '<td>' + repairs.toLocaleString() + '</td>' +
-      '<td>' + falseA + '</td>' +
-      '<td>' + giveups + '</td>' +
-      '<td>' + grave + '</td>' +
-      '<td class="pct-cell ' + pctClass(pct) + '">' + pct + '%</td>' +
-      '<td class="bph-cell ' + bphClass(teamBph) + '">' + fmtBPH(teamBph) + '</td>' +
-      '</tr>';
-  }).join("");
-
-  overviewPanel.innerHTML =
-    '<div class="overview-table-wrap">' +
-    '<table class="teams-table"><thead><tr>' +
-    '<th>Team</th><th>Techs</th><th>Touches</th><th>Repairs</th>' +
-    '<th>False ASICs</th><th>Give-Ups</th><th>Graveyards</th><th>Repair %</th><th>BPH</th>' +
-    '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
-    '</div>';
-  stage.appendChild(overviewPanel);
-
-  // Per-team panels
-  teams.forEach((team, idx) => {
-    const panelIdx = idx + 1;
-    const techMap = teamMap[team];
-    const techNames = Object.keys(techMap).sort((a, b) => {
-      const sa = computeTechStats(techMap[a].rows);
-      const sb = computeTechStats(techMap[b].rows);
-      if (sb.repairs !== sa.repairs) return sb.repairs - sa.repairs;
-      return sb.pct - sa.pct;
-    });
-    const teamRows = techNames.flatMap(n => techMap[n].rows);
-    const tAllRep  = teamRows.filter(r => r.Outcome === "Repaired").length;
-    const tFalseA  = teamRows.filter(isFalseAsic).length;
-    const tRepairs = tAllRep - tFalseA;
-    const tRepairable = teamRows.length - tFalseA;
-    const tPct     = tRepairable > 0 ? Math.round((tRepairs / tRepairable) * 100) : 0;
-    const tTechDays = uniqueTechDays(teamRows, "team");
-    const tBph     = computeBPH(tRepairs, tTechDays);
-
-    const cardsHTML = techNames.map(name => {
-      const s = computeTechStats(techMap[name].rows);
-      const level = techMap[name].level;
-      const pCls = pctClass(s.pct);
-      const bCls = bphClass(s.bph);
-      const subParts = [];
-      if (level) subParts.push(esc(level));
-      subParts.push(s.techDays + " day" + (s.techDays === 1 ? "" : "s"));
-      const sub = subParts.join(" · ");
-      return '<div class="tech-card">' +
-        '<div class="tech-card-head">' +
-          '<div>' +
-            '<div class="tech-card-name">' + esc(name) + '</div>' +
-            '<div class="tech-card-sub">' + sub + '</div>' +
-          '</div>' +
-          '<div class="tech-pct ' + pCls + '">' + s.pct + '%</div>' +
-        '</div>' +
-        '<div class="tech-bph-row">' +
-          '<span class="tech-bph-value ' + bCls + '">' + fmtBPH(s.bph) + '</span>' +
-          '<span class="tech-bph-label">BPH</span>' +
-        '</div>' +
-        '<div class="tech-stats">' +
-          '<div><div class="tech-stat-num">' + s.touches + '</div><div class="tech-stat-label">Touches</div></div>' +
-          '<div><div class="tech-stat-num">' + s.repairs + '</div><div class="tech-stat-label">Repairs</div></div>' +
-          '<div><div class="tech-stat-num false-asic">' + s.falseAsics + '</div><div class="tech-stat-label">False ASICs</div></div>' +
-          '<div><div class="tech-stat-num giveup">' + s.giveups + '</div><div class="tech-stat-label">Give-Ups</div></div>' +
-          '<div><div class="tech-stat-num grave">' + s.graveyards + '</div><div class="tech-stat-label">Graveyards</div></div>' +
-        '</div>' +
-        '</div>';
-    }).join("");
-
-    const panel = document.createElement("div");
-    panel.className = "team-panel" + (panelIdx === currentTeam ? " active" : "");
-    panel.id = "team-" + panelIdx;
-    panel.innerHTML =
-      '<div class="team-header">' +
-        '<div class="team-name">' + esc(team) + '</div>' +
-        '<div class="team-meta">' +
-          '<strong>' + techNames.length + '</strong> Techs' +
-          '<span class="sep">|</span>' +
-          '<strong>' + teamRows.length.toLocaleString() + '</strong> Touches' +
-          '<span class="sep">|</span>' +
-          '<span class="pct ' + pctClass(tPct) + '">' + tPct + '% Repair</span>' +
-          '<span class="sep">|</span>' +
-          '<span class="bph ' + bphClass(tBph) + '">' + fmtBPH(tBph) + ' BPH</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="tech-grid">' + cardsHTML + '</div>';
-    stage.appendChild(panel);
-  });
-
-  startRotation();
-}
-
-function goToTeam(idx) {
-  const totalPages = teams.length + 1;
-  document.querySelectorAll(".team-panel").forEach(p => p.classList.remove("active"));
-  document.querySelectorAll(".team-pill").forEach(d => d.classList.remove("active"));
-  currentTeam = ((idx % totalPages) + totalPages) % totalPages;
-  const panel = document.getElementById("team-" + currentTeam);
-  if (panel) panel.classList.add("active");
-  const pills = document.querySelectorAll(".team-pill");
-  if (pills[currentTeam]) pills[currentTeam].classList.add("active");
-  resetProgress();
-}
-
-function startRotation() {
-  if (browseMode) return;
-  if (rotateTimer) clearInterval(rotateTimer);
-  resetProgress();
-  rotateTimer = setInterval(() => goToTeam(currentTeam + 1), TEAM_ROTATE_MS);
-}
-
-function resetProgress() {
-  if (browseMode) return;
-  if (progTimer) cancelAnimationFrame(progTimer);
-  progStart = performance.now();
-  animateProgress();
-}
-
-function animateProgress() {
-  const pb = document.getElementById("progressBar");
-  if (!pb) return;
-  const pct = Math.min(((performance.now() - progStart) / TEAM_ROTATE_MS) * 100, 100);
-  pb.style.width = pct + "%";
-  if (pct < 100) progTimer = requestAnimationFrame(animateProgress);
-}
-
-function esc(str) {
-  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-
-function useDemoData() {
-  const tNames = ["Team 1","Team 2","Team 3","Team 4","Training"];
-  const levels = ["L1 Tech","L2 Tech","L3 Tech","Lead"];
-  const outcomes = ["Repaired","Repaired","Repaired","Repaired","Give Up","Graveyard"];
-  const names = [
-    ["Jordan M","Riley S","Casey T","Alex P","Morgan W","Sam H"],
-    ["Taylor R","Drew K","Jamie L","Pat N","Quinn B","Avery C"],
-    ["Blake F","Reese O","Skyler D","Charlie G","Devon A","Frankie J"],
-    ["Harley V","Rowan X","Emery Z","Logan U","Sage Y","Peyton I"],
-    ["Finley Q","Kendall W","Cam E","Remy R","Shay T","Arlo S"]
-  ];
-  const rows = [];
-  const today = new Date();
-  tNames.forEach((team, ti) => {
-    names[ti].forEach((name, ni) => {
-      const level = levels[ni % levels.length];
-      const count = 8 + Math.floor(Math.random() * 12);
-      for (let i = 0; i < count; i++) {
-        const outcome = outcomes[Math.floor(Math.random() * outcomes.length)];
-        let errorType = "";
-        if (outcome === "Repaired") {
-          errorType = Math.random() < 0.15 ? "False ASIC" : "Hashboard";
+  function renderTeamsChart(teamSummaries) {
+    const sorted = [...teamSummaries].sort((a,b) => b.pct - a.pct);
+    const ctx = document.getElementById('teamsChart');
+    if (teamsChart) teamsChart.destroy();
+    teamsChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: sorted.map(t => t.name),
+        datasets: [{
+          label: 'Repair %', data: sorted.map(t => t.pct),
+          backgroundColor: sorted.map(t => classToColor(pctClass(t.pct))),
+          borderColor: 'transparent', borderWidth: 0, borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1A1A1D', borderColor: '#27272B', borderWidth: 1,
+            titleColor: COLORS.text, bodyColor: COLORS.text2, padding: 10,
+            callbacks: { label: c => c.parsed.x + '%' }
+          }
+        },
+        scales: {
+          x: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { family: 'Inter', size: 11 }, color: COLORS.muted2 }, grid: { color: COLORS.grid, drawBorder: false } },
+          y: { ticks: { font: { family: 'Inter', size: 12 }, color: COLORS.text2 }, grid: { display: false } }
         }
-        const dayOffset = Math.floor(Math.random() * 8);
-        const rowDate = new Date(today);
-        rowDate.setDate(today.getDate() - dayOffset);
-        rows.push({
-          Name: name, Level: level, Team: team,
-          "Serial Number": "SN" + (1000 + ti*200 + ni*30 + i),
-          Outcome: outcome,
-          "Error Type": errorType,
-          Date: rowDate.toISOString()
-        });
       }
     });
-  });
-  allRows = rows;
-  applyRangeAndRender();
-  document.getElementById("lastUpdated").textContent = "Demo data";
-}
+  }
 
-fetchData();
-setInterval(fetchData, REFRESH_MS);
+  function renderScatterChart(techPoints) {
+    const groups = { L1: [], L2: [], L3: [], SrLead: [], Other: [] };
+    techPoints.forEach(p => {
+      const lvl = (p.level || "").toUpperCase();
+      if (lvl.includes("LEAD") || lvl.includes("SR") || lvl.includes("SENIOR")) groups.SrLead.push(p);
+      else if (lvl.includes("L3") || lvl.includes("III")) groups.L3.push(p);
+      else if (lvl.includes("L2") || lvl.includes("II")) groups.L2.push(p);
+      else if (lvl.includes("L1") || lvl.includes(" I")) groups.L1.push(p);
+      else groups.Other.push(p);
+    });
+    const datasets = [];
+    if (groups.SrLead.length) datasets.push({ label: 'Sr / Lead', data: groups.SrLead, pointStyle: 'circle', backgroundColor: 'transparent', borderColor: COLORS.green, borderWidth: 2.5, pointRadius: 7, hoverRadius: 9 });
+    if (groups.L3.length) datasets.push({ label: 'L3', data: groups.L3, pointStyle: 'star', backgroundColor: COLORS.purple, borderColor: COLORS.purple, borderWidth: 1, pointRadius: 7, hoverRadius: 9 });
+    if (groups.L2.length) datasets.push({ label: 'L2', data: groups.L2, pointStyle: 'triangle', backgroundColor: COLORS.orange, borderColor: COLORS.orange, borderWidth: 1, pointRadius: 7, hoverRadius: 9 });
+    if (groups.L1.length) datasets.push({ label: 'L1', data: groups.L1, pointStyle: 'rect', backgroundColor: COLORS.red, borderColor: COLORS.red, borderWidth: 1, pointRadius: 6, hoverRadius: 8 });
+    if (groups.Other.length) datasets.push({ label: 'Other', data: groups.Other, pointStyle: 'crossRot', backgroundColor: COLORS.text, borderColor: COLORS.text, borderWidth: 2, pointRadius: 7, hoverRadius: 9 });
+
+    const maxBph = Math.max(1, ...techPoints.map(p => p.x)) * 1.1;
+    const ctx = document.getElementById('scatterChart');
+    if (scatterChart) scatterChart.destroy();
+    scatterChart = new Chart(ctx, {
+      type: 'scatter', data: { datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, color: COLORS.text2, boxWidth: 10, boxHeight: 10, usePointStyle: true, padding: 16 } },
+          tooltip: {
+            backgroundColor: '#1A1A1D', borderColor: '#27272B', borderWidth: 1,
+            titleColor: COLORS.text, bodyColor: COLORS.text2, padding: 10,
+            callbacks: { label: c => c.raw.name + ': ' + c.parsed.x.toFixed(2) + ' BPH, ' + c.parsed.y + '%' }
+          }
+        },
+        scales: {
+          x: { min: 0, max: maxBph, title: { display: true, text: 'BPH →', font: { family: 'Inter', size: 11 }, color: COLORS.muted }, ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.muted2 }, grid: { color: COLORS.grid, drawBorder: false } },
+          y: { min: 0, max: 100, title: { display: true, text: 'Repair % →', font: { family: 'Inter', size: 11 }, color: COLORS.muted }, ticks: { callback: v => v + '%', font: { family: 'Inter', size: 11 }, color: COLORS.muted2 }, grid: { color: COLORS.grid, drawBorder: false } }
+        }
+      }
+    });
+  }
+
+  function renderAll() {
+    if (!currentData) return;
+    const lab = currentData.summary;
+
+    // Total Repairs
+    const repairsEl = document.getElementById("s-repairs");
+    repairsEl.textContent = lab.repairs.toLocaleString();
+    repairsEl.className = "kpi-value " + pctClass(lab.pct);
+    const pctBar = document.getElementById("s-pct-bar");
+    pctBar.style.width = Math.min(100, lab.pct) + "%";
+    pctBar.className = "kpi-progress-fill " + pctClass(lab.pct);
+    document.getElementById("s-pct-sub").innerHTML =
+      '<span style="color: var(--' + pctClass(lab.pct) + '); font-weight: 600;">' + lab.pct + '%</span>' +
+      ' · ' + lab.repairable.toLocaleString() + ' repairable';
+
+    // BPH
+    const bphEl = document.getElementById("s-bph");
+    bphEl.textContent = fmtBPH(lab.bph);
+    bphEl.className = "kpi-value " + bphClass(lab.bph);
+    const bphBar = document.getElementById("s-bph-bar");
+    bphBar.style.width = Math.min(100, (lab.bph / 5) * 100) + "%";
+    bphBar.className = "kpi-progress-fill " + bphClass(lab.bph);
+    document.getElementById("s-bph-sub").textContent =
+      "Across " + lab.techDays + " tech-day" + (lab.techDays === 1 ? "" : "s");
+
+    // Touches
+    document.getElementById("s-touches").textContent = lab.touches.toLocaleString();
+
+    // Unique Touches
+    document.getElementById("s-unique").textContent = lab.unique.toLocaleString();
+    const uniquePct = lab.touches > 0 ? Math.round((lab.unique / lab.touches) * 100) : 0;
+    const uniqueBar = document.getElementById("s-unique-bar");
+    if (uniqueBar) uniqueBar.style.width = uniquePct + "%";
+    document.getElementById("s-unique-sub").textContent = uniquePct + "% of total touches";
+
+    // Outcomes
+    document.getElementById("s-false").textContent = lab.falseAsics.toLocaleString();
+    document.getElementById("s-giveups").textContent = lab.giveups.toLocaleString();
+    document.getElementById("s-grave").textContent = lab.graveyards.toLocaleString();
+
+    const outcomeTotal = lab.falseAsics + lab.giveups + lab.graveyards;
+    const outBar = document.getElementById("s-outcome-bar");
+    if (outcomeTotal > 0) {
+      const fpct = (lab.falseAsics / outcomeTotal) * 100;
+      const gpct = (lab.giveups / outcomeTotal) * 100;
+      const grpct = (lab.graveyards / outcomeTotal) * 100;
+      outBar.innerHTML =
+        '<div class="outcome-bar-false" style="width:' + fpct + '%;"></div>' +
+        '<div class="outcome-bar-giveup" style="width:' + gpct + '%;"></div>' +
+        '<div class="outcome-bar-grave" style="width:' + grpct + '%;"></div>';
+    } else {
+      outBar.innerHTML = '';
+    }
+
+    // Charts
+    renderTrendChart(currentData.trend);
+    renderTeamsChart(currentData.teamSummaries);
+    renderScatterChart(currentData.techScatter);
+
+    // Team strip
+    teams = currentData.teamPanels.map(t => t.name);
+    const stripEl = document.getElementById("teamStrip");
+    let stripHTML = '<button class="team-pill' + (currentTeam === 0 ? " active" : "") + '" onclick="goToTeam(0)">Overview</button>';
+    teams.forEach((t, i) => {
+      const idx = i + 1;
+      stripHTML += '<button class="team-pill' + (idx === currentTeam ? " active" : "") + '" onclick="goToTeam(' + idx + ')">' + esc(t) + '</button>';
+    });
+    stripEl.innerHTML = stripHTML;
+
+    // Build panels
+    const stage = document.getElementById("teamStage");
+    stage.innerHTML = "";
+
+    // Overview panel
+    const overviewPanel = document.createElement("div");
+    overviewPanel.className = "team-panel" + (currentTeam === 0 ? " active" : "");
+    overviewPanel.id = "team-0";
+    const tableRows = currentData.teamSummaries.map(t =>
+      '<tr>' +
+        '<td class="team-name-cell">' + esc(t.name) + '</td>' +
+        '<td>' + t.techCount + '</td>' +
+        '<td>' + t.touches.toLocaleString() + '</td>' +
+        '<td>' + t.repairs.toLocaleString() + '</td>' +
+        '<td>' + t.falseAsics + '</td>' +
+        '<td>' + t.giveups + '</td>' +
+        '<td>' + t.graveyards + '</td>' +
+        '<td class="pct-cell ' + pctClass(t.pct) + '">' + t.pct + '%</td>' +
+        '<td class="bph-cell ' + bphClass(t.bph) + '">' + fmtBPH(t.bph) + '</td>' +
+      '</tr>'
+    ).join("");
+    overviewPanel.innerHTML =
+      '<div class="overview-table-wrap">' +
+      '<table class="teams-table"><thead><tr>' +
+      '<th>Team</th><th>Techs</th><th>Touches</th><th>Repairs</th>' +
+      '<th>False ASICs</th><th>Give-Ups</th><th>Graveyards</th><th>Repair %</th><th>BPH</th>' +
+      '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
+      '</div>';
+    stage.appendChild(overviewPanel);
+
+    // Per-team panels
+    currentData.teamPanels.forEach((panelData, idx) => {
+      const panelIdx = idx + 1;
+      const cardsHTML = panelData.techs.map(s => {
+        const pCls = pctClass(s.pct);
+        const bCls = bphClass(s.bph);
+        const subParts = [];
+        if (s.level) subParts.push(esc(s.level));
+        subParts.push(s.techDays + " day" + (s.techDays === 1 ? "" : "s"));
+        const sub = subParts.join(" · ");
+        return '<div class="tech-card">' +
+          '<div class="tech-card-head">' +
+            '<div>' +
+              '<div class="tech-card-name">' + esc(s.name) + '</div>' +
+              '<div class="tech-card-sub">' + sub + '</div>' +
+            '</div>' +
+            '<div class="tech-pct ' + pCls + '">' + s.pct + '%</div>' +
+          '</div>' +
+          '<div class="tech-bph-row">' +
+            '<span class="tech-bph-value ' + bCls + '">' + fmtBPH(s.bph) + '</span>' +
+            '<span class="tech-bph-label">BPH</span>' +
+          '</div>' +
+          '<div class="tech-stats">' +
+            '<div><div class="tech-stat-num">' + s.touches + '</div><div class="tech-stat-label">Touches</div></div>' +
+            '<div><div class="tech-stat-num">' + s.repairs + '</div><div class="tech-stat-label">Repairs</div></div>' +
+            '<div><div class="tech-stat-num false-asic">' + s.falseAsics + '</div><div class="tech-stat-label">False ASICs</div></div>' +
+            '<div><div class="tech-stat-num giveup">' + s.giveups + '</div><div class="tech-stat-label">Give-Ups</div></div>' +
+            '<div><div class="tech-stat-num grave">' + s.graveyards + '</div><div class="tech-stat-label">Graveyards</div></div>' +
+          '</div>' +
+          '</div>';
+      }).join("");
+
+      const panel = document.createElement("div");
+      panel.className = "team-panel" + (panelIdx === currentTeam ? " active" : "");
+      panel.id = "team-" + panelIdx;
+      panel.innerHTML =
+        '<div class="team-header">' +
+          '<div class="team-name">' + esc(panelData.name) + '</div>' +
+          '<div class="team-meta">' +
+            '<strong>' + panelData.techCount + '</strong> Techs' +
+            '<span class="sep">|</span>' +
+            '<strong>' + panelData.touches.toLocaleString() + '</strong> Touches' +
+            '<span class="sep">|</span>' +
+            '<span class="pct ' + pctClass(panelData.pct) + '">' + panelData.pct + '% Repair</span>' +
+            '<span class="sep">|</span>' +
+            '<span class="bph ' + bphClass(panelData.bph) + '">' + fmtBPH(panelData.bph) + ' BPH</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="tech-grid">' + cardsHTML + '</div>';
+      stage.appendChild(panel);
+    });
+
+    startRotation();
+  }
+
+  function goToTeam(idx) {
+    const totalPages = teams.length + 1;
+    document.querySelectorAll(".team-panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".team-pill").forEach(d => d.classList.remove("active"));
+    currentTeam = ((idx % totalPages) + totalPages) % totalPages;
+    const panel = document.getElementById("team-" + currentTeam);
+    if (panel) panel.classList.add("active");
+    const pills = document.querySelectorAll(".team-pill");
+    if (pills[currentTeam]) pills[currentTeam].classList.add("active");
+    resetProgress();
+  }
+
+  function startRotation() {
+    if (browseMode) return;
+    if (rotateTimer) clearInterval(rotateTimer);
+    resetProgress();
+    rotateTimer = setInterval(() => goToTeam(currentTeam + 1), TEAM_ROTATE_MS);
+  }
+
+  function resetProgress() {
+    if (browseMode) return;
+    if (progTimer) cancelAnimationFrame(progTimer);
+    progStart = performance.now();
+    animateProgress();
+  }
+
+  function animateProgress() {
+    const pb = document.getElementById("progressBar");
+    if (!pb) return;
+    const pct = Math.min(((performance.now() - progStart) / TEAM_ROTATE_MS) * 100, 100);
+    pb.style.width = pct + "%";
+    if (pct < 100) progTimer = requestAnimationFrame(animateProgress);
+  }
+
+  function esc(str) {
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  fetchData();
+  setInterval(fetchData, REFRESH_MS);
 </script>
 </body>
 </html>
