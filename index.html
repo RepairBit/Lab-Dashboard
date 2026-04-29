@@ -793,7 +793,8 @@ function setRange(range) {
     b.classList.toggle("active", b.dataset.range === range);
   });
   currentTeam = 0;
-  applyRangeAndRender();
+  document.getElementById("lastUpdated").textContent = "Loading " + range + "...";
+  fetchData();
 }
 
 function toggleMode() {
@@ -821,10 +822,12 @@ async function fetchData() {
     useDemoData(); return;
   }
   try {
-    const res = await fetch(APPS_SCRIPT_URL + "?range=all&t=" + Date.now());
+    const res = await fetch(APPS_SCRIPT_URL + "?range=" + encodeURIComponent(currentRange) + "&t=" + Date.now());
     const json = await res.json();
     allRows = json.rows || [];
-    applyRangeAndRender();
+    // Server already filtered to currentRange, so allRows IS allData
+    allData = allRows;
+    renderAll();
     document.getElementById("lastUpdated").textContent =
       "Updated " + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   } catch (e) {
@@ -833,6 +836,7 @@ async function fetchData() {
 }
 
 function applyRangeAndRender() {
+  // Kept for backward compatibility (demo data path)
   allData = filterByRange(allRows, currentRange);
   renderAll();
 }
