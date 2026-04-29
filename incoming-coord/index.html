@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Incoming Coordinator Dashboard</title>
+<title>Coordinators Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -74,8 +74,14 @@
   .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
   .kpi-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .kpi-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .kpi-value-row { display: flex; align-items: baseline; gap: 8px; }
   .kpi-value { font-size: 36px; font-weight: 600; color: var(--text); letter-spacing: -1px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .kpi-delta { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+  .kpi-delta.up   { background: var(--green-bg); color: var(--green); }
+  .kpi-delta.down { background: var(--red-bg);   color: var(--red); }
+  .kpi-delta.flat { background: rgba(255,255,255,0.06); color: var(--muted); }
   .kpi-sub { font-size: 11px; color: var(--muted-2); margin-top: 8px; }
+  .kpi-sub-strong { color: var(--text-2); font-weight: 500; }
   .split-row { display: flex; gap: 16px; align-items: baseline; }
   .split-col { display: flex; flex-direction: column; }
   .split-divider { width: 1px; align-self: stretch; background: var(--border); }
@@ -87,6 +93,7 @@
   .shift-bar-day { background: var(--day); }
   .shift-bar-night { background: var(--night); }
   .chart-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .chart-row-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
   .chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .chart-title { font-size: 13px; font-weight: 500; color: var(--text); }
@@ -125,7 +132,7 @@
   <div class="brand">
     <img src="../shared/wrench_transparent.png" alt="" class="brand-mark-logo" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\'brand-mark\'>R</div>');">
     <div>
-      <div class="brand-title">Incoming Coordinator Dashboard</div>
+      <div class="brand-title">Coordinators Dashboard</div>
     </div>
   </div>
   <div class="header-right">
@@ -159,8 +166,12 @@
 <div class="kpi-strip">
   <div class="kpi-card">
     <div class="kpi-head"><span class="kpi-label">Total Boards</span></div>
-    <div class="kpi-value" id="s-units">—</div>
+    <div class="kpi-value-row">
+      <span class="kpi-value" id="s-units">—</span>
+      <span class="kpi-delta flat" id="s-units-delta">—</span>
+    </div>
     <div class="kpi-sub" id="s-units-sub">—</div>
+    <div class="kpi-sub" id="s-avg-sub">—</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-head"><span class="kpi-label">Boards per Hour</span></div>
@@ -176,6 +187,7 @@
       </div>
     </div>
     <div class="kpi-sub" id="s-bph-sub">—</div>
+    <div class="kpi-sub" id="s-bph-delta-sub">—</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-head"><span class="kpi-label">Active Coordinators</span></div>
@@ -213,7 +225,7 @@
   <div class="chart-card">
     <div class="chart-head">
       <div class="chart-title">Daily Trend</div>
-      <span class="chart-meta">Last 14 days</span>
+      <span class="chart-meta" id="trend-meta">Last 14 days</span>
     </div>
     <div class="chart-canvas-wrap"><canvas id="trendChart"></canvas></div>
   </div>
@@ -226,12 +238,29 @@
   </div>
 </div>
 
+<div class="chart-row-3">
+  <div class="chart-card">
+    <div class="chart-head">
+      <div class="chart-title">Top Models Processed</div>
+      <span class="chart-meta">Most frequent</span>
+    </div>
+    <div class="chart-canvas-wrap"><canvas id="modelsChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-head">
+      <div class="chart-title">Error Type Breakdown</div>
+      <span class="chart-meta">Distribution</span>
+    </div>
+    <div class="chart-canvas-wrap"><canvas id="errorsChart"></canvas></div>
+  </div>
+</div>
+
 <div class="chart-card" style="margin-bottom: 12px;">
   <div class="chart-head">
-    <div class="chart-title">Top Models Processed</div>
-    <span class="chart-meta">Most frequent</span>
+    <div class="chart-title">Hourly Distribution</div>
+    <span class="chart-meta" id="hourly-meta">Avg boards per hour</span>
   </div>
-  <div class="chart-canvas-wrap"><canvas id="modelsChart"></canvas></div>
+  <div class="chart-canvas-wrap"><canvas id="hourlyChart"></canvas></div>
 </div>
 
 <div class="section-divider">
@@ -250,7 +279,7 @@
 
   let currentData = null;
   let currentRange = "today", currentShift = "all";
-  let trendChart = null, leadersChart = null, modelsChart = null;
+  let trendChart = null, leadersChart = null, modelsChart = null, errorsChart = null, hourlyChart = null;
   let sortKey = "units", sortDir = "desc";
   let browseMode = false, refreshTimer = null;
 
@@ -324,6 +353,31 @@
     return currentData[currentShift] || currentData.all;
   }
 
+  function priorPeriodLabel() {
+    switch (currentRange) {
+      case 'today':   return 'yesterday';
+      case 'week':    return 'last week';
+      case 'month':   return 'last month';
+      case 'quarter': return 'last quarter';
+      case 'ytd':     return 'last year';
+      case 'all':     return null;
+      default:        return 'prior period';
+    }
+  }
+
+  function renderDelta(elementId, value, label) {
+    const el = document.getElementById(elementId);
+    if (value === null || value === undefined) {
+      el.textContent = '—';
+      el.className = 'kpi-delta flat';
+      return;
+    }
+    const sign = value > 0 ? '↑' : value < 0 ? '↓' : '·';
+    const cls = value > 0 ? 'up' : value < 0 ? 'down' : 'flat';
+    el.textContent = sign + ' ' + Math.abs(value) + '%';
+    el.className = 'kpi-delta ' + cls;
+  }
+
   function renderTrendChart(trend) {
     const ctx = document.getElementById('trendChart');
     if (trendChart) trendChart.destroy();
@@ -382,11 +436,7 @@
         scales: {
           x: { min: 0, ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.muted2 }, grid: { color: COLORS.grid, drawBorder: false } },
           y: {
-            ticks: {
-              font: { family: 'Inter', size: 12 },
-              color: COLORS.text2,
-              autoSkip: false
-            },
+            ticks: { font: { family: 'Inter', size: 12 }, color: COLORS.text2, autoSkip: false },
             afterFit: function(scale) { scale.width = 140; },
             grid: { display: false }
           }
@@ -418,6 +468,83 @@
             },
             grid: { color: COLORS.grid, drawBorder: false }
           },
+          y: { min: 0, ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.muted2 }, grid: { color: COLORS.grid, drawBorder: false } }
+        }
+      }
+    });
+  }
+
+  function renderErrorsChart(errorTypes) {
+    // Color by error category
+    const errorColors = {
+      'ASIC Error':   COLORS.red,
+      'False ASIC':   '#3b82f6',
+      'TS':           COLORS.orange,
+      'Graveyard':    '#f15d25',
+      'Give Up':      '#f68b20',
+      'Repaired':     COLORS.green,
+      'Unknown':      COLORS.muted
+    };
+    const labels = errorTypes.map(e => e.name);
+    const data = errorTypes.map(e => e.count);
+    const colors = errorTypes.map(e => errorColors[e.name] || COLORS.purple);
+
+    const ctx = document.getElementById('errorsChart');
+    if (errorsChart) errorsChart.destroy();
+    errorsChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Boards', data, backgroundColor: colors, borderColor: 'transparent', borderWidth: 0, borderRadius: 4 }] },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: '#1A1A1D', borderColor: '#27272B', borderWidth: 1, titleColor: COLORS.text, bodyColor: COLORS.text2, padding: 10, callbacks: { label: c => c.parsed.x.toLocaleString() + ' boards' } }
+        },
+        scales: {
+          x: { min: 0, ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.muted2 }, grid: { color: COLORS.grid, drawBorder: false } },
+          y: {
+            ticks: { font: { family: 'Inter', size: 12 }, color: COLORS.text2, autoSkip: false },
+            afterFit: function(scale) { scale.width = 110; },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  function renderHourlyChart(hourlyAvg) {
+    const labels = [];
+    for (let h = 0; h < 24; h++) {
+      const display = h === 0 ? '12a' : h < 12 ? h + 'a' : h === 12 ? '12p' : (h - 12) + 'p';
+      labels.push(display);
+    }
+    // Color by shift heuristic: 7am-7pm = day color, else night color
+    const colors = labels.map((_, h) => (h >= 7 && h < 19) ? COLORS.day : COLORS.night);
+
+    const ctx = document.getElementById('hourlyChart');
+    if (hourlyChart) hourlyChart.destroy();
+    hourlyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Boards', data: hourlyAvg,
+          backgroundColor: colors.map(c => c + 'B0'), // semi-transparent
+          borderColor: 'transparent', borderWidth: 0, borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1A1A1D', borderColor: '#27272B', borderWidth: 1,
+            titleColor: COLORS.text, bodyColor: COLORS.text2, padding: 10,
+            callbacks: { label: c => c.parsed.y.toFixed(1) + ' avg boards' }
+          }
+        },
+        scales: {
+          x: { ticks: { font: { family: 'Inter', size: 10 }, color: COLORS.muted2, autoSkip: false }, grid: { color: COLORS.grid, drawBorder: false } },
           y: { min: 0, ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.muted2 }, grid: { color: COLORS.grid, drawBorder: false } }
         }
       }
@@ -487,10 +614,25 @@
     if (!slice) return;
     const summary = slice.summary;
 
-    // Total Boards
+    // Total Boards + delta
     document.getElementById("s-units").textContent = summary.units.toLocaleString();
     document.getElementById("s-units-sub").textContent =
       summary.coordDays + " coordinator-day" + (summary.coordDays === 1 ? "" : "s") + " logged";
+
+    // Average boards per coordinator-day with rolling avg comparison
+    if (summary.avgPerCoordDay !== undefined) {
+      let avgText = '<span class="kpi-sub-strong">' + summary.avgPerCoordDay + '</span> avg boards/coord/day';
+      if (summary.rollingAvg && summary.rollingAvg > 0) {
+        avgText += ' · 4-wk avg ' + summary.rollingAvg;
+      }
+      document.getElementById("s-avg-sub").innerHTML = avgText;
+    } else {
+      document.getElementById("s-avg-sub").textContent = '';
+    }
+
+    // Total Boards delta
+    const deltas = summary.deltas || {};
+    renderDelta("s-units-delta", deltas.units);
 
     // BPH split
     document.getElementById("s-bph-day").textContent = fmtBPH(summary.dayBph);
@@ -508,6 +650,17 @@
       }
     }
     document.getElementById("s-bph-sub").textContent = bphSub;
+
+    // BPH delta sub-line
+    const priorLabel = priorPeriodLabel();
+    if (priorLabel && deltas.bph !== null && deltas.bph !== undefined) {
+      const sign = deltas.bph > 0 ? '↑' : deltas.bph < 0 ? '↓' : '·';
+      const word = deltas.bph > 0 ? 'up' : deltas.bph < 0 ? 'down' : 'flat';
+      document.getElementById("s-bph-delta-sub").textContent =
+        sign + ' ' + Math.abs(deltas.bph) + '% ' + word + ' vs ' + priorLabel;
+    } else {
+      document.getElementById("s-bph-delta-sub").textContent = '';
+    }
 
     // Active Coordinators
     document.getElementById("s-coords-day").textContent = summary.dayCoords.toLocaleString();
@@ -530,10 +683,26 @@
       sb.innerHTML = '';
     }
 
+    // Trend meta updates with range
+    const trendMeta = document.getElementById("trend-meta");
+    const trendLabels = {
+      today: 'Last 14 days', week: 'Last 14 days', month: 'Last 14 days',
+      quarter: 'Last 13 weeks', ytd: 'Last 12 months', all: 'Last 12 months'
+    };
+    if (trendMeta) trendMeta.textContent = trendLabels[currentRange] || 'Trend';
+
+    // Hourly meta
+    const hourlyMeta = document.getElementById("hourly-meta");
+    if (hourlyMeta) {
+      hourlyMeta.textContent = currentRange === 'today' ? 'Boards by hour today' : 'Avg boards per hour';
+    }
+
     // Charts
     renderTrendChart(slice.trend);
     renderLeadersChart(slice.leaders);
     renderModelsChart(slice.models);
+    renderErrorsChart(slice.errorTypes || []);
+    renderHourlyChart(slice.hourlyAvg || new Array(24).fill(0));
 
     // Table
     renderTable(slice.coordStats);
