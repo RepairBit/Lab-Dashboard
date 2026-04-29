@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepairBit Dashboards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0A0B;
+    --surface: #131316;
+    --surface-2: #1A1A1D;
+    --border: #27272B;
+    --border-strong: #3A3A40;
+    --text: #FAFAFB;
+    --text-2: #ECECEE;
+    --muted: #9A9AA1;
+    --muted-2: #6E6E76;
+    --brand: #E07A1A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--text-2);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 80px 32px 48px;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .header img {
+    height: 56px;
+    width: auto;
+    opacity: 0.9;
+  }
+  .header-fallback {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, #E07A1A, #C25E0F);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-weight: 700;
+    color: var(--bg);
+  }
+  h1 {
+    font-size: 48px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -1.5px;
+    margin-bottom: 12px;
+  }
+  .lede {
+    font-size: 17px;
+    color: var(--muted);
+    margin-bottom: 56px;
+    max-width: 560px;
+    line-height: 1.5;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 28px 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .card:hover {
+    border-color: var(--brand);
+    background: var(--surface-2);
+    transform: translateY(-2px);
+  }
+  .card-eyebrow {
+    font-size: 11px;
+    color: var(--muted-2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .card-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .card-arrow {
+    color: var(--brand);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .card.coming-soon {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .card.coming-soon .card-arrow {
+    color: var(--muted-2);
+  }
+  .footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--muted-2);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <img src="shared/repairbit-logo.png" alt="RepairBit" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\'header-fallback\'>R</div>');">
+  </div>
+
+  <h1>Dashboards</h1>
+  <p class="lede">Live performance and operations dashboards for the RepairBit team.</p>
+
+  <div class="grid">
+    <a class="card" href="lab/">
+      <div class="card-eyebrow">Lab</div>
+      <div class="card-title">Lab Performance</div>
+      <div class="card-desc">Real-time technician and team performance, repair rates, and outcome breakdowns across the lab.</div>
+      <div class="card-arrow">Open dashboard →</div>
