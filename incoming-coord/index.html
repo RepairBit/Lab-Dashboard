@@ -381,7 +381,15 @@
         },
         scales: {
           x: { min: 0, ticks: { font: { family: 'Inter', size: 11 }, color: COLORS.muted2 }, grid: { color: COLORS.grid, drawBorder: false } },
-          y: { ticks: { font: { family: 'Inter', size: 12 }, color: COLORS.text2 }, grid: { display: false } }
+          y: {
+            ticks: {
+              font: { family: 'Inter', size: 12 },
+              color: COLORS.text2,
+              autoSkip: false
+            },
+            afterFit: function(scale) { scale.width = 140; },
+            grid: { display: false }
+          }
         }
       }
     });
